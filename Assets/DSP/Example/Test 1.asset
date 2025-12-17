@@ -20,8 +20,79 @@ MonoBehaviour:
     eventParameters: []
     finalEvents: []
   - id: 1
+    nodeType: 2
+    position: {x: 508.66666, y: 300}
+    values:
+    - type: 3
+      intValue: 0
+      floatValue: 0
+      stringValue: Foo
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    eventParameters: []
+    finalEvents: []
+  - id: 2
+    nodeType: 3
+    position: {x: 771.3333, y: 300}
+    values:
+    - type: 8
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray:
+      - Bar
+      - What?
+      - No....
+      boolArray: 
+      objectArray: []
+    eventParameters: []
+    finalEvents: []
+  - id: 3
+    nodeType: 2
+    position: {x: 926, y: 300}
+    values:
+    - type: 3
+      intValue: 0
+      floatValue: 0
+      stringValue: Correct
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    eventParameters: []
+    finalEvents: []
+  - id: 4
+    nodeType: 2
+    position: {x: 926, y: 418}
+    values:
+    - type: 3
+      intValue: 0
+      floatValue: 0
+      stringValue: Incorrect!
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    eventParameters: []
+    finalEvents: []
+  - id: 5
     nodeType: 1
-    position: {x: 917.3333, y: 300}
+    position: {x: 1262.6666, y: 300}
     values:
     - type: 1
       intValue: 2
@@ -36,9 +107,9 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-  - id: 2
+  - id: 6
     nodeType: 4
-    position: {x: 500, y: 300}
+    position: {x: 1144, y: 475.99997}
     values:
     - type: 1
       intValue: 1
@@ -61,8 +132,7 @@ MonoBehaviour:
       floatArray: []
       stringArray: []
       boolArray: 
-      objectArray:
-      - {fileID: 2775958802251886732, guid: 326187e462e13c147923681fb0e256b4, type: 3}
+      objectArray: []
     - type: 8
       intValue: 0
       floatValue: 0
@@ -71,43 +141,37 @@ MonoBehaviour:
       objectValue: {fileID: 0}
       intArray: 
       floatArray: []
-      stringArray:
-      - LogTest/Log(String)
-      boolArray: 
-      objectArray: []
-    eventParameters:
-    - type: 3
-      intValue: 0
-      floatValue: 0
-      stringValue: a
-      boolValue: 0
-      objectValue: {fileID: 0}
-      intArray: 
-      floatArray: []
       stringArray: []
       boolArray: 
       objectArray: []
-    finalEvents:
-    - target: {fileID: 7635623395965940071, guid: 326187e462e13c147923681fb0e256b4, type: 3}
-      methodName: Log
-      parameter:
-        type: 3
-        intValue: 0
-        floatValue: 0
-        stringValue: a
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    eventParameters: []
+    finalEvents: []
   edges:
   - fromNode: 0
+    outPortID: 0
+    toNode: 1
+    inPortID: 0
+  - fromNode: 1
     outPortID: 0
     toNode: 2
     inPortID: 0
   - fromNode: 2
     outPortID: 0
-    toNode: 1
+    toNode: 3
+    inPortID: 0
+  - fromNode: 3
+    outPortID: 0
+    toNode: 5
+    inPortID: 0
+  - fromNode: 2
+    outPortID: 1
+    toNode: 4
+    inPortID: 0
+  - fromNode: 2
+    outPortID: 2
+    toNode: 4
+    inPortID: 0
+  - fromNode: 4
+    outPortID: 0
+    toNode: 5
     inPortID: 1
