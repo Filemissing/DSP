@@ -7,10 +7,13 @@ using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.UIElements;
-
+using Button = UnityEngine.UIElements.Button;
 using Edge = UnityEditor.Experimental.GraphView.Edge;
+using Image = UnityEngine.UIElements.Image;
 using Object = UnityEngine.Object;
+using Toggle = UnityEngine.UIElements.Toggle;
 
 public class DSP_EditorWindow : EditorWindow
 {
@@ -50,6 +53,8 @@ public class DSP_EditorWindow : EditorWindow
 
 public class DSP_NodeGraphView : GraphView
 {
+    private bool isUpdating;
+    
     public DSP_NodeGraphView()
     {
         style.flexGrow = 1;
@@ -60,7 +65,7 @@ public class DSP_NodeGraphView : GraphView
         this.AddManipulator(new SelectionDragger());
         this.AddManipulator(new RectangleSelector());
 
-        
+        EditorApplication.update += OnEditorUpdate;
     }
     public void LoadFromAsset(DSP_ConversationGraphAsset graphAsset)
     {
@@ -152,7 +157,11 @@ public class DSP_NodeGraphView : GraphView
                     id = nodes.ToList().FindIndex(n => n == node),
                     nodeType = DSP_NodeType.Dialogue,
                     position = node.GetPosition().position,
-                    values = new SerializableValue[] { new(dialogueNode.dialogueText) }
+                    values = new SerializableValue[]
+                    {
+                        new(dialogueNode.dialogueText),
+                        new(dialogueNode.characterAsset)
+                    }
                 });
             }
             else if (node is DSP_ChoiceNode choiceNode)
@@ -233,6 +242,22 @@ public class DSP_NodeGraphView : GraphView
         });
 
         return compatiblePorts;
+    }
+
+    private void OnEditorUpdate()
+    {
+        foreach (var element in nodes)
+        {
+            if (element is DSP_DialogueNode node)
+            {
+                node.UpdateCharacterPreview();
+            }
+        }
+    }
+    
+    private void OnDisable()
+    {
+        EditorApplication.update -= OnEditorUpdate;
     }
 }
 
@@ -351,13 +376,24 @@ public class DSP_EndNode : Node
 }
 public class DSP_DialogueNode : Node
 {
+    public DSP_CharacterAsset characterAsset;
     public string dialogueText;
+
+    private Image characterPreviewImage;
+    private Label characterPreviewLabel;
+    private VisualElement previewContainer;
+    private static Texture2D placeholderPortrait;
 
     public DSP_DialogueNode(Vector2 position, SerializableValue[] values = null)
     {
         // load values if they exist
         if (values != null && values.Length > 0)
+        {
             dialogueText = values[0].GetValue() as string;
+            
+            if (values.Length > 1)
+                characterAsset = values[1].GetValue() as DSP_CharacterAsset;
+        }
 
         title = "Dialogue";
         style.width = 200;
@@ -366,14 +402,67 @@ public class DSP_DialogueNode : Node
         this.AddInputPort();
         this.AddOutputPort();
 
-        // Manual label
-        var label = new Label("Dialogue");
-        label.style.unityFontStyleAndWeight = FontStyle.Bold;
-        label.style.paddingTop = 2;
-        label.style.paddingBottom = 2;
-        label.style.paddingLeft = 2;
+        
+        // Character label
+        var characterLabel = new Label("Character");
+        characterLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+        characterLabel.style.paddingTop = 2;
+        characterLabel.style.paddingBottom = 2;
+        characterLabel.style.paddingLeft = 2;
+        
+        mainContainer.Add(characterLabel);
+        
+        
+        // CharacterField
+        ObjectField characterField = new ObjectField()
+        {
+            objectType = typeof(DSP_CharacterAsset),
+            allowSceneObjects = false,
+            value = characterAsset
+        };
 
-        mainContainer.Add(label);
+        characterField.RegisterValueChangedCallback(evt =>
+        {
+            characterAsset = evt.newValue as DSP_CharacterAsset;
+            UpdateCharacterPreview();
+        });
+        mainContainer.Add(characterField);
+        
+        
+        // Preview container (hidden if characterField is nil)
+        previewContainer = new VisualElement();
+        previewContainer.style.flexDirection = FlexDirection.Row;
+        previewContainer.style.marginTop = 4;
+        previewContainer.style.alignItems = Align.Center;
+        
+        // Portrait image
+        characterPreviewImage = new Image();
+        characterPreviewImage.style.width = 12;
+        characterPreviewImage.style.height = 12;
+        characterPreviewImage.style.marginLeft = 4;
+        characterPreviewImage.style.marginRight = 2;
+
+        characterPreviewImage.image = GetPlaceholder();
+        
+        // Name label
+        characterPreviewLabel = new Label();
+        characterPreviewLabel.style.fontSize = 11;
+        
+        previewContainer.Add(characterPreviewImage);
+        previewContainer.Add(characterPreviewLabel);
+        
+        mainContainer.Add(previewContainer);
+        
+        
+        // Dialogue label
+        var textLabel = new Label("Text");
+        textLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+        textLabel.style.paddingTop = 2;
+        textLabel.style.paddingBottom = 2;
+        textLabel.style.paddingLeft = 2;
+        
+        mainContainer.Add(textLabel);
+        
 
         // TextField without built-in label
         var textField = new TextField
@@ -383,12 +472,44 @@ public class DSP_DialogueNode : Node
         };
 
         textField.RegisterValueChangedCallback(evt => dialogueText = evt.newValue);
-
         mainContainer.Add(textField);
 
         RefreshExpandedState();
         RefreshPorts();
         SetPosition(new Rect(position, Vector2.zero));
+        UpdateCharacterPreview();
+    }
+
+    public void UpdateCharacterPreview()
+    {
+        if (characterAsset != null)
+        {
+            previewContainer.style.display = DisplayStyle.Flex;
+
+            var tex = characterAsset.characterImage != null ? characterAsset.characterImage.texture : GetPlaceholder();
+            
+            characterPreviewImage.image = tex;
+            characterPreviewLabel.text  = characterAsset.characterName;
+        }
+        else
+        {
+            previewContainer.style.display = DisplayStyle.None;
+
+            characterPreviewImage.image = GetPlaceholder();
+            characterPreviewLabel.text = "";
+        }
+        
+        characterPreviewImage.MarkDirtyRepaint();
+    }
+
+    private static Texture2D GetPlaceholder()
+    {
+        if (placeholderPortrait == null)
+        {
+            placeholderPortrait = AssetDatabase.LoadAssetAtPath<Texture2D>(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets("placeholderPortrait t:Texture2D").First()));
+        }
+
+        return placeholderPortrait;
     }
 }
 public class DSP_ChoiceNode : Node

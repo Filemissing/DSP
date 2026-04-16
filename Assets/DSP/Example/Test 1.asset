@@ -15,20 +15,33 @@ MonoBehaviour:
   nodes:
   - id: 0
     nodeType: 0
-    position: {x: 366, y: 300}
+    position: {x: 366.40002, y: 300}
     values: []
     eventParameters: []
     finalEvents: []
   - id: 1
     nodeType: 2
-    position: {x: 508.66666, y: 300}
+    position: {x: 508.80002, y: 300}
     values:
     - type: 3
       intValue: 0
       floatValue: 0
-      stringValue: Foo
+      stringValue: 'My name''s Jeff.
+
+        yippeyayay'
       boolValue: 0
       objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    - type: 5
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 11400000, guid: 92578d1debabeca4e87ac875ce29c8db, type: 2}
       intArray: 
       floatArray: []
       stringArray: []
@@ -38,7 +51,7 @@ MonoBehaviour:
     finalEvents: []
   - id: 2
     nodeType: 3
-    position: {x: 771.3333, y: 300}
+    position: {x: 771.2, y: 300}
     values:
     - type: 8
       intValue: 0
@@ -58,7 +71,7 @@ MonoBehaviour:
     finalEvents: []
   - id: 3
     nodeType: 2
-    position: {x: 926, y: 300}
+    position: {x: 926.4, y: 300}
     values:
     - type: 3
       intValue: 0
@@ -71,11 +84,22 @@ MonoBehaviour:
       stringArray: []
       boolArray: 
       objectArray: []
+    - type: 0
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
     eventParameters: []
     finalEvents: []
   - id: 4
     nodeType: 2
-    position: {x: 926, y: 418}
+    position: {x: 926.4, y: 418.40002}
     values:
     - type: 3
       intValue: 0
@@ -88,11 +112,22 @@ MonoBehaviour:
       stringArray: []
       boolArray: 
       objectArray: []
+    - type: 0
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
     eventParameters: []
     finalEvents: []
   - id: 5
     nodeType: 1
-    position: {x: 1262.6666, y: 300}
+    position: {x: 1263.2, y: 300}
     values:
     - type: 1
       intValue: 2
@@ -109,7 +144,7 @@ MonoBehaviour:
     finalEvents: []
   - id: 6
     nodeType: 4
-    position: {x: 1144, y: 475.99997}
+    position: {x: 1144, y: 476}
     values:
     - type: 1
       intValue: 1
