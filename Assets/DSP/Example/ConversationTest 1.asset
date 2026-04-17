@@ -15,63 +15,13 @@ MonoBehaviour:
   nodes:
   - id: 0
     nodeType: 0
-    position: {x: 366.40002, y: 300}
+    position: {x: 366, y: 300}
     values: []
     eventParameters: []
     finalEvents: []
   - id: 1
     nodeType: 2
-    position: {x: 508.80002, y: 300}
-    values:
-    - type: 3
-      intValue: 0
-      floatValue: 0
-      stringValue: 'My name''s Jeff.
-
-        yippeyayay'
-      boolValue: 0
-      objectValue: {fileID: 0}
-      intArray: 
-      floatArray: []
-      stringArray: []
-      boolArray: 
-      objectArray: []
-    - type: 5
-      intValue: 0
-      floatValue: 0
-      stringValue: 
-      boolValue: 0
-      objectValue: {fileID: 11400000, guid: 92578d1debabeca4e87ac875ce29c8db, type: 2}
-      intArray: 
-      floatArray: []
-      stringArray: []
-      boolArray: 
-      objectArray: []
-    eventParameters: []
-    finalEvents: []
-  - id: 2
-    nodeType: 3
-    position: {x: 771.2, y: 300}
-    values:
-    - type: 8
-      intValue: 0
-      floatValue: 0
-      stringValue: 
-      boolValue: 0
-      objectValue: {fileID: 0}
-      intArray: 
-      floatArray: []
-      stringArray:
-      - Bar
-      - What?
-      - No....
-      boolArray: 
-      objectArray: []
-    eventParameters: []
-    finalEvents: []
-  - id: 3
-    nodeType: 2
-    position: {x: 926.4, y: 300}
+    position: {x: 926, y: 300}
     values:
     - type: 3
       intValue: 0
@@ -97,9 +47,9 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-  - id: 4
+  - id: 2
     nodeType: 2
-    position: {x: 926.4, y: 418.40002}
+    position: {x: 926, y: 418}
     values:
     - type: 3
       intValue: 0
@@ -125,9 +75,29 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-  - id: 5
+  - id: 3
+    nodeType: 3
+    position: {x: 772, y: 300}
+    values:
+    - type: 8
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray:
+      - Bar
+      - What?
+      - No....
+      boolArray: 
+      objectArray: []
+    eventParameters: []
+    finalEvents: []
+  - id: 4
     nodeType: 1
-    position: {x: 1263.2, y: 300}
+    position: {x: 1478, y: 300}
     values:
     - type: 1
       intValue: 2
@@ -142,9 +112,9 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-  - id: 6
+  - id: 5
     nodeType: 4
-    position: {x: 1144, y: 476}
+    position: {x: 1174, y: 418}
     values:
     - type: 1
       intValue: 1
@@ -181,32 +151,66 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
+  - id: 6
+    nodeType: 2
+    position: {x: 509, y: 300}
+    values:
+    - type: 3
+      intValue: 0
+      floatValue: 0
+      stringValue: 'My name''s Jeff.
+
+        yippeyayay'
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    - type: 5
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 11400000, guid: 92578d1debabeca4e87ac875ce29c8db, type: 2}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    eventParameters: []
+    finalEvents: []
   edges:
   - fromNode: 0
     outPortID: 0
-    toNode: 1
+    toNode: 6
     inPortID: 0
   - fromNode: 1
     outPortID: 0
-    toNode: 2
+    toNode: 4
     inPortID: 0
   - fromNode: 2
     outPortID: 0
-    toNode: 3
+    toNode: 5
     inPortID: 0
   - fromNode: 3
     outPortID: 0
-    toNode: 5
+    toNode: 1
     inPortID: 0
-  - fromNode: 2
+  - fromNode: 3
     outPortID: 1
-    toNode: 4
+    toNode: 2
     inPortID: 0
-  - fromNode: 2
+  - fromNode: 3
     outPortID: 2
-    toNode: 4
+    toNode: 2
     inPortID: 0
-  - fromNode: 4
+  - fromNode: 5
     outPortID: 0
-    toNode: 5
+    toNode: 4
     inPortID: 1
+  - fromNode: 6
+    outPortID: 0
+    toNode: 3
+    inPortID: 0
