@@ -111,7 +111,7 @@ public class DSP_ConversationIterator
     private readonly DSP_ConversationGraphAsset _graph;
     private DSP_NodeData _currentNode;
 
-    public DSP_NodeData currentNode => _currentNode;
+    public DSP_NodeData CurrentNode => _currentNode;
     public DSP_IteratorState State { get; private set; } = DSP_IteratorState.Running;
 
     public DSP_ConversationIterator(DSP_ConversationGraphAsset graph)
@@ -145,7 +145,7 @@ public class DSP_ConversationIterator
     }
 
     /// <summary>
-    /// For Choice nodes — caller passes the chosen outPortID.
+    /// For Choice nodes, caller passes the chosen PortID.
     /// </summary>
     public void Advance(int chosenPortId)
     {
