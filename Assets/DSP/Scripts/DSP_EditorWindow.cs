@@ -78,21 +78,21 @@ public class DSP_NodeGraphView : GraphView
         schedule.Execute(() =>
         {
             // if this is a new/empty asset (e.g. start and end nodes aren't accounted for)
-            if (graphAsset.nodes.Count < 2)
+            if (graphAsset.GetNodeCount() < 2)
             {
                 AddElement(new DSP_StartNode(contentViewContainer.contentRect.center + new Vector2(-200, 300)));
                 AddElement(new DSP_EndNode(contentViewContainer.contentRect.center + new Vector2(200, 300)));
             }
 
             // instantiate nodes
-            foreach (DSP_NodeData nodeData in graphAsset.nodes)
+            foreach (DSP_NodeData nodeData in graphAsset.GetNodes())
             {
                 // handle Event nodes separately since they require special handling
                 if (nodeData.nodeType == DSP_NodeType.Event)
                 {
                     DSP_EventNode eventNode = new DSP_EventNode(nodeData.position, nodeData.values, nodeData.eventParameters);
                     AddElement(eventNode);
-                    break;
+                    continue;
                 }
 
                 Type nodeType = nodeData.nodeType switch
@@ -109,7 +109,7 @@ public class DSP_NodeGraphView : GraphView
             }
 
             // restore edges
-            foreach (DSP_EdgeData edgeData in graphAsset.edges)
+            foreach (DSP_EdgeData edgeData in graphAsset.GetAllEdges())
             {
                 Node fromNode = nodes.ElementAt(edgeData.fromNode);
                 Node toNode = nodes.ElementAt(edgeData.toNode);
@@ -124,15 +124,14 @@ public class DSP_NodeGraphView : GraphView
     }
     public void SaveToAsset(DSP_ConversationGraphAsset graphAsset)
     {
-        graphAsset.nodes.Clear();
-        graphAsset.edges.Clear();
+        graphAsset.Clear();
 
         // save node data
         foreach (Node node in nodes)
         {
             if (node is DSP_StartNode)
             {
-                graphAsset.nodes.Add(new DSP_NodeData
+                graphAsset.AddNode(new DSP_NodeData
                 {
                     id = nodes.ToList().FindIndex(n => n == node),
                     nodeType = DSP_NodeType.Start,
@@ -142,7 +141,7 @@ public class DSP_NodeGraphView : GraphView
             }
             else if (node is DSP_EndNode endNode)
             {
-                graphAsset.nodes.Add(new DSP_NodeData
+                graphAsset.AddNode(new DSP_NodeData
                 {
                     id = nodes.ToList().FindIndex(n => n == node),
                     nodeType = DSP_NodeType.End,
@@ -152,7 +151,7 @@ public class DSP_NodeGraphView : GraphView
             }
             else if (node is DSP_DialogueNode dialogueNode)
             {
-                graphAsset.nodes.Add(new DSP_NodeData
+                graphAsset.AddNode(new DSP_NodeData
                 {
                     id = nodes.ToList().FindIndex(n => n == node),
                     nodeType = DSP_NodeType.Dialogue,
@@ -166,7 +165,7 @@ public class DSP_NodeGraphView : GraphView
             }
             else if (node is DSP_ChoiceNode choiceNode)
             {
-                graphAsset.nodes.Add(new DSP_NodeData
+                graphAsset.AddNode(new DSP_NodeData
                 {
                     id = nodes.ToList().FindIndex(n => n == node),
                     nodeType = DSP_NodeType.Choice,
@@ -176,7 +175,7 @@ public class DSP_NodeGraphView : GraphView
             }
             else if (node is DSP_EventNode eventNode)
             {
-                graphAsset.nodes.Add(new DSP_NodeData
+                graphAsset.AddNode(new DSP_NodeData
                 {
                     id = nodes.ToList().FindIndex(n => n == node),
                     nodeType = DSP_NodeType.Event,
@@ -204,7 +203,7 @@ public class DSP_NodeGraphView : GraphView
             int outPortID = fromNode.GetPorts(Direction.Output).ToList().FindIndex(p => p == edge.output);
             int inPortID = toNode.GetPorts(Direction.Input).ToList().FindIndex(p => p == edge.input);
 
-            graphAsset.edges.Add(new DSP_EdgeData
+            graphAsset.AddEdge(new DSP_EdgeData
             {
                 fromNode = fromNodeIndex,
                 outPortID = outPortID,

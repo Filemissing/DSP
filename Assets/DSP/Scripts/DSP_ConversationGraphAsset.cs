@@ -1,14 +1,101 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 [CreateAssetMenu(fileName = "NewDialogueGraph", menuName = "DSP/Dialogue Graph")]
-public class DSP_ConversationGraphAsset : ScriptableObject
+public class DSP_ConversationGraphAsset : ScriptableObject, ISerializationCallbackReceiver
 {
+    Dictionary<DSP_NodeData, List<DSP_EdgeData>> graph = new();
+
     public List<DSP_NodeData> nodes = new();
     public List<DSP_EdgeData> edges = new();
+
+    public void Clear()
+    {
+        graph.Clear();
+        nodes.Clear();
+        edges.Clear();
+    }
+    
+    public int GetNodeCount()
+    {
+        return graph.Count;
+    }
+    public List<DSP_NodeData> GetNodes()
+    {
+        return new List<DSP_NodeData>(graph.Keys);
+    }
+    public List<DSP_EdgeData> GetAllEdges()
+    {
+        List<DSP_EdgeData> allEdges = new List<DSP_EdgeData>();
+        foreach (var edgeList in graph.Values)
+        {
+            allEdges.AddRange(edgeList);
+        }
+        return allEdges;
+    }
+
+    public void AddNode(DSP_NodeData node)
+    {
+        if (!graph.ContainsKey(node))
+        {
+            graph.Add(node, new List<DSP_EdgeData>());
+        }
+    }
+    public void AddEdge(DSP_EdgeData edge)
+    {
+        DSP_NodeData fromNode = graph.Keys.FirstOrDefault(n => n.id == edge.fromNode);
+        if (fromNode != null)
+        {
+            graph[fromNode].Add(edge);
+        }
+    }
+
+    public List<DSP_EdgeData> GetOutgoingEdges(DSP_NodeData node)
+    {
+        return new List<DSP_EdgeData>(graph[node]);
+    }
+
+    public void PrintGraph()
+    {
+        foreach (var node in graph)
+        {
+            Debug.Log($"{node.Key}: {string.Join(", ", node.Value)}");
+        }
+    }
+
+    public void OnBeforeSerialize()
+    {
+        nodes.Clear();
+        edges.Clear();
+
+        foreach (var kvp in graph)
+        {
+            nodes.Add(kvp.Key);
+            edges.AddRange(kvp.Value);
+        }
+    }
+
+    public void OnAfterDeserialize()
+    {
+        graph.Clear();
+
+        foreach (var node in nodes)
+        {
+            graph.Add(node, new List<DSP_EdgeData>());
+        }
+        foreach (var edge in edges)
+        {
+            DSP_NodeData fromNode = graph.Keys.FirstOrDefault(n => n.id == edge.fromNode);
+            if (fromNode != null)
+            {
+                graph[fromNode].Add(edge);
+            }
+        }
+    }
 }
 public enum DSP_NodeType
 {
@@ -187,8 +274,8 @@ public static class DSP_GraphAssetHandler
 
         if (obj is DSP_ConversationGraphAsset graphAsset)
         {
-            DSP_EditorWindow.Open(graphAsset); // your custom GraphView window
-            return true; // tells Unity "I handled this"
+            DSP_EditorWindow.Open(graphAsset);
+            return true;
         }
 
         return false;
