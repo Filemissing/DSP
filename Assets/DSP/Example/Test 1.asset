@@ -19,6 +19,23 @@ MonoBehaviour:
     values: []
     eventParameters: []
     finalEvents: []
+    finalCondition:
+      target: {fileID: 0}
+      methodName: 
+      staticTypeName: 
+      isStatic: 0
+      parameter:
+        type: 0
+        intValue: 0
+        floatValue: 0
+        stringValue: 
+        boolValue: 0
+        objectValue: {fileID: 0}
+        intArray: 
+        floatArray: []
+        stringArray: []
+        boolArray: 
+        objectArray: []
   - id: 1
     nodeType: 2
     position: {x: 926, y: 300}
@@ -47,111 +64,24 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
+    finalCondition:
+      target: {fileID: 0}
+      methodName: 
+      staticTypeName: 
+      isStatic: 0
+      parameter:
+        type: 0
+        intValue: 0
+        floatValue: 0
+        stringValue: 
+        boolValue: 0
+        objectValue: {fileID: 0}
+        intArray: 
+        floatArray: []
+        stringArray: []
+        boolArray: 
+        objectArray: []
   - id: 2
-    nodeType: 2
-    position: {x: 926, y: 418}
-    values:
-    - type: 3
-      intValue: 0
-      floatValue: 0
-      stringValue: Incorrect!
-      boolValue: 0
-      objectValue: {fileID: 0}
-      intArray: 
-      floatArray: []
-      stringArray: []
-      boolArray: 
-      objectArray: []
-    - type: 0
-      intValue: 0
-      floatValue: 0
-      stringValue: 
-      boolValue: 0
-      objectValue: {fileID: 0}
-      intArray: 
-      floatArray: []
-      stringArray: []
-      boolArray: 
-      objectArray: []
-    eventParameters: []
-    finalEvents: []
-  - id: 3
-    nodeType: 3
-    position: {x: 772, y: 300}
-    values:
-    - type: 8
-      intValue: 0
-      floatValue: 0
-      stringValue: 
-      boolValue: 0
-      objectValue: {fileID: 0}
-      intArray: 
-      floatArray: []
-      stringArray:
-      - Bar
-      - What?
-      - No....
-      boolArray: 
-      objectArray: []
-    eventParameters: []
-    finalEvents: []
-  - id: 4
-    nodeType: 1
-    position: {x: 1478, y: 300}
-    values:
-    - type: 1
-      intValue: 2
-      floatValue: 0
-      stringValue: 
-      boolValue: 0
-      objectValue: {fileID: 0}
-      intArray: 
-      floatArray: []
-      stringArray: []
-      boolArray: 
-      objectArray: []
-    eventParameters: []
-    finalEvents: []
-  - id: 5
-    nodeType: 4
-    position: {x: 1174, y: 418}
-    values:
-    - type: 1
-      intValue: 1
-      floatValue: 0
-      stringValue: 
-      boolValue: 0
-      objectValue: {fileID: 0}
-      intArray: 
-      floatArray: []
-      stringArray: []
-      boolArray: 
-      objectArray: []
-    - type: 10
-      intValue: 0
-      floatValue: 0
-      stringValue: 
-      boolValue: 0
-      objectValue: {fileID: 0}
-      intArray: 
-      floatArray: []
-      stringArray: []
-      boolArray: 
-      objectArray: []
-    - type: 8
-      intValue: 0
-      floatValue: 0
-      stringValue: 
-      boolValue: 0
-      objectValue: {fileID: 0}
-      intArray: 
-      floatArray: []
-      stringArray: []
-      boolArray: 
-      objectArray: []
-    eventParameters: []
-    finalEvents: []
-  - id: 6
     nodeType: 2
     position: {x: 509, y: 300}
     values:
@@ -181,10 +111,389 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
+    finalCondition:
+      target: {fileID: 0}
+      methodName: 
+      staticTypeName: 
+      isStatic: 0
+      parameter:
+        type: 0
+        intValue: 0
+        floatValue: 0
+        stringValue: 
+        boolValue: 0
+        objectValue: {fileID: 0}
+        intArray: 
+        floatArray: []
+        stringArray: []
+        boolArray: 
+        objectArray: []
+  - id: 3
+    nodeType: 3
+    position: {x: 759, y: 397}
+    values:
+    - type: 8
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray:
+      - Bar
+      - What?
+      - No....
+      boolArray: 
+      objectArray: []
+    eventParameters: []
+    finalEvents: []
+    finalCondition:
+      target: {fileID: 0}
+      methodName: 
+      staticTypeName: 
+      isStatic: 0
+      parameter:
+        type: 0
+        intValue: 0
+        floatValue: 0
+        stringValue: 
+        boolValue: 0
+        objectValue: {fileID: 0}
+        intArray: 
+        floatArray: []
+        stringArray: []
+        boolArray: 
+        objectArray: []
+  - id: 4
+    nodeType: 1
+    position: {x: 2054, y: 452}
+    values:
+    - type: 1
+      intValue: 3
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    eventParameters: []
+    finalEvents: []
+    finalCondition:
+      target: {fileID: 0}
+      methodName: 
+      staticTypeName: 
+      isStatic: 0
+      parameter:
+        type: 0
+        intValue: 0
+        floatValue: 0
+        stringValue: 
+        boolValue: 0
+        objectValue: {fileID: 0}
+        intArray: 
+        floatArray: []
+        stringArray: []
+        boolArray: 
+        objectArray: []
+  - id: 5
+    nodeType: 5
+    position: {x: 907, y: 570}
+    values:
+    - type: 5
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 11500000, guid: ce2e71a9a24e079429aca42b5b4b97a6, type: 3}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    - type: 3
+      intValue: 0
+      floatValue: 0
+      stringValue: Static/Return(Boolean)
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    eventParameters:
+    - type: 4
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 1
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    finalEvents: []
+    finalCondition:
+      target: {fileID: 0}
+      methodName: Return
+      staticTypeName: ExampleScript, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      isStatic: 1
+      parameter:
+        type: 4
+        intValue: 0
+        floatValue: 0
+        stringValue: 
+        boolValue: 1
+        objectValue: {fileID: 0}
+        intArray: 
+        floatArray: []
+        stringArray: []
+        boolArray: 
+        objectArray: []
+  - id: 6
+    nodeType: 4
+    position: {x: 1552, y: 475}
+    values:
+    - type: 1
+      intValue: 3
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    - type: 10
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray:
+      - {fileID: 11400000, guid: 25c2c43aeaa11ae41a0139c1716755f4, type: 2}
+      - {fileID: 11400000, guid: 25c2c43aeaa11ae41a0139c1716755f4, type: 2}
+      - {fileID: 11500000, guid: ce2e71a9a24e079429aca42b5b4b97a6, type: 3}
+    - type: 8
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray:
+      - ExampleScriptableObject/Print(Int32)
+      - ExampleScriptableObject/Shout()
+      - Static/Main()
+      boolArray: 
+      objectArray: []
+    eventParameters:
+    - type: 1
+      intValue: 5
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    - type: 0
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    - type: 0
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    finalEvents:
+    - target: {fileID: 11400000, guid: 25c2c43aeaa11ae41a0139c1716755f4, type: 2}
+      methodName: Print
+      staticTypeName: 
+      isStatic: 0
+      parameter:
+        type: 1
+        intValue: 5
+        floatValue: 0
+        stringValue: 
+        boolValue: 0
+        objectValue: {fileID: 0}
+        intArray: 
+        floatArray: []
+        stringArray: []
+        boolArray: 
+        objectArray: []
+    - target: {fileID: 11400000, guid: 25c2c43aeaa11ae41a0139c1716755f4, type: 2}
+      methodName: Shout
+      staticTypeName: 
+      isStatic: 0
+      parameter:
+        type: 0
+        intValue: 0
+        floatValue: 0
+        stringValue: 
+        boolValue: 0
+        objectValue: {fileID: 0}
+        intArray: 
+        floatArray: []
+        stringArray: []
+        boolArray: 
+        objectArray: []
+    - target: {fileID: 0}
+      methodName: Main
+      staticTypeName: ExampleScript, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+        PublicKeyToken=null
+      isStatic: 1
+      parameter:
+        type: 0
+        intValue: 0
+        floatValue: 0
+        stringValue: 
+        boolValue: 0
+        objectValue: {fileID: 0}
+        intArray: 
+        floatArray: []
+        stringArray: []
+        boolArray: 
+        objectArray: []
+    finalCondition:
+      target: {fileID: 0}
+      methodName: 
+      staticTypeName: 
+      isStatic: 0
+      parameter:
+        type: 0
+        intValue: 0
+        floatValue: 0
+        stringValue: 
+        boolValue: 0
+        objectValue: {fileID: 0}
+        intArray: 
+        floatArray: []
+        stringArray: []
+        boolArray: 
+        objectArray: []
+  - id: 7
+    nodeType: 2
+    position: {x: 1287, y: 686}
+    values:
+    - type: 3
+      intValue: 0
+      floatValue: 0
+      stringValue: DIE!
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    - type: 0
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    eventParameters: []
+    finalEvents: []
+    finalCondition:
+      target: {fileID: 0}
+      methodName: 
+      staticTypeName: 
+      isStatic: 0
+      parameter:
+        type: 0
+        intValue: 0
+        floatValue: 0
+        stringValue: 
+        boolValue: 0
+        objectValue: {fileID: 0}
+        intArray: 
+        floatArray: []
+        stringArray: []
+        boolArray: 
+        objectArray: []
+  - id: 8
+    nodeType: 2
+    position: {x: 1287, y: 475}
+    values:
+    - type: 3
+      intValue: 0
+      floatValue: 0
+      stringValue: Incorrect!
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    - type: 0
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    eventParameters: []
+    finalEvents: []
+    finalCondition:
+      target: {fileID: 0}
+      methodName: 
+      staticTypeName: 
+      isStatic: 0
+      parameter:
+        type: 0
+        intValue: 0
+        floatValue: 0
+        stringValue: 
+        boolValue: 0
+        objectValue: {fileID: 0}
+        intArray: 
+        floatArray: []
+        stringArray: []
+        boolArray: 
+        objectArray: []
   edges:
   - fromNode: 0
     outPortID: 0
-    toNode: 6
+    toNode: 2
     inPortID: 0
   - fromNode: 1
     outPortID: 0
@@ -192,25 +501,37 @@ MonoBehaviour:
     inPortID: 0
   - fromNode: 2
     outPortID: 0
-    toNode: 5
+    toNode: 3
     inPortID: 0
   - fromNode: 3
     outPortID: 0
     toNode: 1
     inPortID: 0
   - fromNode: 3
-    outPortID: 1
-    toNode: 2
+    outPortID: 2
+    toNode: 5
     inPortID: 0
   - fromNode: 3
-    outPortID: 2
-    toNode: 2
+    outPortID: 1
+    toNode: 5
     inPortID: 0
   - fromNode: 5
     outPortID: 0
-    toNode: 4
-    inPortID: 1
+    toNode: 8
+    inPortID: 0
+  - fromNode: 5
+    outPortID: 1
+    toNode: 7
+    inPortID: 0
   - fromNode: 6
     outPortID: 0
-    toNode: 3
+    toNode: 4
+    inPortID: 1
+  - fromNode: 7
+    outPortID: 0
+    toNode: 4
+    inPortID: 2
+  - fromNode: 8
+    outPortID: 0
+    toNode: 6
     inPortID: 0

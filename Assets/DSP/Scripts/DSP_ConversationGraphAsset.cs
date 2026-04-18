@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine;
@@ -97,7 +98,8 @@ public enum DSP_NodeType
     End,
     Dialogue,
     Choice,
-    Event
+    Event,
+    Condition
 }
 public enum DSP_IteratorState
 {
@@ -189,6 +191,13 @@ public class DSP_ConversationIterator
                     node = FollowSingleEdge(node); // auto-advance
                     break;
 
+                case DSP_NodeType.Condition:
+                    bool result = node.finalCondition.Invoke();
+                    var conditionEdges = _graph.GetOutgoingEdges(node);
+                    var branch = conditionEdges.FirstOrDefault(e => e.outPortID == (result ? 0 : 1));
+                    node = branch != null ? _graph.GetNodes().FirstOrDefault(n => n.id == branch.toNode) : null;
+                    break;
+
                 case DSP_NodeType.Dialogue:
                 case DSP_NodeType.Choice:
                     State = DSP_IteratorState.WaitingForUI;
@@ -220,8 +229,9 @@ public class DSP_ConversationIterator
     public Vector2 position;
     public SerializableValue[] values;
 
-    public SerializableValue[] eventParameters; // only for Event nodes
+    public SerializableValue[] eventParameters; // only for Event and Condition nodes
     public SerializableEvent[] finalEvents; // only for Event nodes
+    public SerializableCondition finalCondition; // only for Condition nodes
 }
 [System.Serializable] public class DSP_EdgeData
 {
@@ -334,40 +344,153 @@ public class DSP_ConversationIterator
 }
 [System.Serializable] public class SerializableEvent
 {
+    public Object target;        // null when static
+    public string methodName;
+    public string staticTypeName; // AssemblyQualifiedName, only used when isStatic
+    public bool isStatic;
+    public SerializableValue parameter;
+
+    // Instance constructor
     public SerializableEvent(Object target, string methodName, SerializableValue parameter)
     {
         this.target = target;
         this.methodName = methodName;
         this.parameter = parameter;
+        this.isStatic = false;
     }
 
-    public Object target;
-    public string methodName;
-    public SerializableValue parameter;
+    // Static constructor
+    public SerializableEvent(Type staticType, string methodName, SerializableValue parameter)
+    {
+        this.target = null;
+        this.methodName = methodName;
+        this.staticTypeName = staticType.AssemblyQualifiedName;
+        this.parameter = parameter;
+        this.isStatic = true;
+    }
 
     public void Invoke()
     {
-        if (target == null || string.IsNullOrEmpty(methodName))
-        {
-            Debug.LogWarning("Event target or method name is null.");
-            return;
-        }
-
-        var method = target.GetType().GetMethod(methodName);
-        if (method == null)
-        {
-            Debug.LogWarning($"Method {methodName} not found on target {target.name}.");
-            return;
-        }
+        MethodInfo method;
+        object[] args = null;
 
         var paramValue = parameter?.GetValue();
         if (paramValue != null)
+            args = new object[] { paramValue };
+
+        if (isStatic)
         {
-            method.Invoke(target, new object[] { paramValue });
+            if (string.IsNullOrEmpty(staticTypeName))
+            {
+                Debug.LogWarning("SerializableEvent: staticTypeName is empty.");
+                return;
+            }
+
+            Type type = Type.GetType(staticTypeName);
+            if (type == null)
+            {
+                Debug.LogWarning($"SerializableEvent: could not resolve type '{staticTypeName}'.");
+                return;
+            }
+
+            method = type.GetMethod(methodName, BindingFlags.Static | BindingFlags.Public);
+            if (method == null)
+            {
+                Debug.LogWarning($"SerializableEvent: static method '{methodName}' not found on '{type.Name}'.");
+                return;
+            }
+
+            method.Invoke(null, args);
         }
         else
         {
-            method.Invoke(target, null);
+            if (target == null || string.IsNullOrEmpty(methodName))
+            {
+                Debug.LogWarning("SerializableEvent: target or methodName is null.");
+                return;
+            }
+
+            method = target.GetType().GetMethod(methodName,
+                BindingFlags.Instance | BindingFlags.Public);
+
+            if (method == null)
+            {
+                Debug.LogWarning($"SerializableEvent: instance method '{methodName}' not found on '{target.name}'.");
+                return;
+            }
+
+            method.Invoke(target, args);
+        }
+    }
+}
+[System.Serializable] public class SerializableCondition
+{
+    public Object target;
+    public string methodName;
+    public string staticTypeName;
+    public bool isStatic;
+    public SerializableValue parameter;
+
+    public SerializableCondition(Object target, string methodName, SerializableValue parameter = null)
+    {
+        this.target = target;
+        this.methodName = methodName;
+        this.isStatic = false;
+        this.parameter = parameter;
+    }
+
+    public SerializableCondition(Type staticType, string methodName, SerializableValue parameter = null)
+    {
+        this.staticTypeName = staticType.AssemblyQualifiedName;
+        this.methodName = methodName;
+        this.isStatic = true;
+        this.parameter = parameter;
+    }
+
+    public bool Invoke()
+    {
+        MethodInfo method;
+        object[] args = null;
+
+        var paramValue = parameter?.GetValue();
+        if (paramValue != null)
+            args = new object[] { paramValue };
+
+        if (isStatic)
+        {
+            if (string.IsNullOrEmpty(staticTypeName))
+            {
+                Debug.LogWarning("SerializableCondition: staticTypeName is empty.");
+                return false;
+            }
+            Type type = Type.GetType(staticTypeName);
+            if (type == null)
+            {
+                Debug.LogWarning($"SerializableCondition: could not resolve type '{staticTypeName}'.");
+                return false;
+            }
+            method = type.GetMethod(methodName, BindingFlags.Static | BindingFlags.Public);
+            if (method == null)
+            {
+                Debug.LogWarning($"SerializableCondition: static method '{methodName}' not found on '{type.Name}'.");
+                return false;
+            }
+            return (bool)method.Invoke(null, args);
+        }
+        else
+        {
+            if (target == null || string.IsNullOrEmpty(methodName))
+            {
+                Debug.LogWarning("SerializableCondition: target or methodName is null.");
+                return false;
+            }
+            method = target.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public);
+            if (method == null)
+            {
+                Debug.LogWarning($"SerializableCondition: method '{methodName}' not found on '{target.name}'.");
+                return false;
+            }
+            return (bool)method.Invoke(target, args);
         }
     }
 }
