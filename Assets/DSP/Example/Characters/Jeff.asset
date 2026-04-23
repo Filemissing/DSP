@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: Jeff
   m_EditorClassIdentifier: 
   characterName: Jeff
-  characterImage: {fileID: 21300000, guid: bdebbc8dd9e77eb4c9cd8a3125fdb698, type: 3}
+  characterImage: {fileID: 0}
