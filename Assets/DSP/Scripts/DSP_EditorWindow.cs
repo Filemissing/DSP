@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Unity.VisualScripting;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.UIElements;
 using Button = UnityEngine.UIElements.Button;
 using Edge = UnityEditor.Experimental.GraphView.Edge;
@@ -88,9 +86,9 @@ public class DSP_NodeGraphView : GraphView
             foreach (DSP_NodeData nodeData in graphAsset.GetNodes())
             {
                 // handle Event and Condition nodes separately since they require special handling
-                if (nodeData.nodeType == DSP_NodeType.Event)
+                if (nodeData.nodeType == DSP_NodeType.StaticEvent)
                 {
-                    DSP_EventNode eventNode = new DSP_EventNode(nodeData.position, nodeData.values, nodeData.eventParameters);
+                    DSP_StaticEventNode eventNode = new DSP_StaticEventNode(nodeData.position, nodeData.values, nodeData.eventParameters);
                     AddElement(eventNode);
                     continue;
                 }
@@ -107,6 +105,7 @@ public class DSP_NodeGraphView : GraphView
                     DSP_NodeType.End => typeof(DSP_EndNode),
                     DSP_NodeType.Dialogue => typeof(DSP_DialogueNode),
                     DSP_NodeType.Choice => typeof(DSP_ChoiceNode),
+                    DSP_NodeType.SceneEvent => typeof(DSP_SceneEventNode),
                     _ => throw new Exception("Unknown node type")
                 };
 
@@ -179,19 +178,19 @@ public class DSP_NodeGraphView : GraphView
                     values = new SerializableValue[] { new(choiceNode.choices.Select(c => c.Item1.value).ToArray()) }
                 });
             }
-            else if (node is DSP_EventNode eventNode)
+            else if (node is DSP_StaticEventNode staticEventNode)
             {
                 graphAsset.AddNode(new DSP_NodeData
                 {
                     id = nodes.ToList().FindIndex(n => n == node),
-                    nodeType = DSP_NodeType.Event,
+                    nodeType = DSP_NodeType.StaticEvent,
                     position = node.GetPosition().position,
                     values = new SerializableValue[]
                     {
-                        new(eventNode.rowCount),
+                        new(staticEventNode.rowCount),
                         // read directly from tracked references, not finalActions
-                        new(eventNode.assignedObjects.Select(o => o).ToArray()),
-                        new(eventNode.finalActions.Select(a =>
+                        new(staticEventNode.assignedObjects.Select(o => o).ToArray()),
+                        new(staticEventNode.finalActions.Select(a =>
                         {
                             if (a == null) return null;
                             if (a.isStatic)
@@ -210,8 +209,21 @@ public class DSP_NodeGraphView : GraphView
                             }
                         }).ToArray())
                     },
-                    eventParameters = eventNode.parameters.Select(p => new SerializableValue(p)).ToArray(),
-                    finalEvents = eventNode.finalActions.ToArray()
+                    eventParameters = staticEventNode.parameters.Select(p => new SerializableValue(p)).ToArray(),
+                    finalEvents = staticEventNode.finalActions.ToArray()
+                });
+            }
+            else if (node is DSP_SceneEventNode sceneEventNode)
+            {
+                graphAsset.AddNode(new DSP_NodeData
+                {
+                    id = nodes.ToList().FindIndex(n => n == node),
+                    nodeType = DSP_NodeType.SceneEvent,
+                    position = node.GetPosition().position,
+                    values = new SerializableValue[]
+                    {
+                        new(sceneEventNode.eventAsset)
+                    }
                 });
             }
             else if (node is DSP_ConditionNode conditionNode)
@@ -291,7 +303,8 @@ public class DSP_NodeGraphView : GraphView
 
         evt.menu.AppendAction("Dialogue Node", (a) => AddElement(new DSP_DialogueNode(mousePos)));
         evt.menu.AppendAction("Choice Node", (a) => AddElement(new DSP_ChoiceNode(mousePos)));
-        evt.menu.AppendAction("Event Node", (a) => AddElement(new DSP_EventNode(mousePos)));
+        evt.menu.AppendAction("Static Event Node", (a) => AddElement(new DSP_StaticEventNode(mousePos)));
+        evt.menu.AppendAction("Scene Event Node", (a) => AddElement(new DSP_SceneEventNode(mousePos)));
         evt.menu.AppendAction("Condition Node", (a) => AddElement(new DSP_ConditionNode(mousePos)));
     }
     public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
@@ -683,7 +696,7 @@ public class DSP_ChoiceNode : Node
         choices.RemoveAt(choices.Count - 1);
     }
 }
-public class DSP_EventNode : Node
+public class DSP_StaticEventNode : Node
 {
     // Per-row data needed to resolve the dropdown selection back to a MethodInfo
     // Key: "GroupName/MethodSignature" string → (MethodInfo, instance target or null if static)
@@ -695,7 +708,7 @@ public class DSP_EventNode : Node
 
     public int rowCount = 0;
 
-    public DSP_EventNode(Vector2 position, SerializableValue[] values = null, SerializableValue[] parameters = null)
+    public DSP_StaticEventNode(Vector2 position, SerializableValue[] values = null, SerializableValue[] parameters = null)
     {
         title = "Event";
         this.FixTransparency();
@@ -987,6 +1000,40 @@ public class DSP_EventNode : Node
     {
         return type.IsPrimitive || type == typeof(string) ||
                typeof(Object).IsAssignableFrom(type);
+    }
+}
+public class DSP_SceneEventNode : Node
+{
+    public DSP_SceneEvent eventAsset;
+
+    public DSP_SceneEventNode(Vector2 position, SerializableValue[] values = null)
+    {
+        title = "Event";
+        this.FixTransparency();
+
+        this.AddInputPort();
+        this.AddOutputPort();
+
+        ObjectField eventField = new ObjectField()
+        {
+            objectType = typeof(DSP_SceneEvent),
+            allowSceneObjects = false
+        };
+
+        eventField.RegisterValueChangedCallback(evt => eventAsset = evt.newValue as DSP_SceneEvent);
+
+        mainContainer.Add(eventField);
+
+        // load saved value if it exists
+        if (values != null && values.Length > 0)
+        {
+            eventAsset = values[0].GetValue() as DSP_SceneEvent;
+            eventField.value = eventAsset;
+        }
+
+        RefreshExpandedState();
+        RefreshPorts();
+        SetPosition(new Rect(position, Vector2.zero));
     }
 }
 public class DSP_ConditionNode : Node

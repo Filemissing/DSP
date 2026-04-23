@@ -9,7 +9,8 @@ public enum DSP_NodeType
     End,
     Dialogue,
     Choice,
-    Event,
+    StaticEvent,
+    SceneEvent,
     Condition
 }
 

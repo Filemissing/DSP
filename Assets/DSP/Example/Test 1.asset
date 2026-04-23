@@ -200,7 +200,7 @@ MonoBehaviour:
         boolArray: 
         objectArray: []
   - id: 5
-    nodeType: 5
+    nodeType: 6
     position: {x: 907, y: 570}
     values:
     - type: 5

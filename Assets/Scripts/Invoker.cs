@@ -8,7 +8,7 @@ public class Invoker : MonoBehaviour
     {
         foreach (DSP_NodeData node in conversation.GetNodes())
         {
-            if (node.nodeType == DSP_NodeType.Event)
+            if (node.nodeType == DSP_NodeType.StaticEvent)
             {
                 foreach (SerializableEvent e in node.finalEvents)
                 {

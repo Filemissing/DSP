@@ -175,8 +175,17 @@ public class DSP_ConversationIterator
                     State = DSP_IteratorState.Finished;
                     return;
 
-                case DSP_NodeType.Event:
-                    InvokeEventNode(node);
+                case DSP_NodeType.StaticEvent:
+                    foreach (var e in node.finalEvents) e.Invoke();
+                    node = FollowSingleEdge(node); // auto-advance
+                    break;
+
+                case DSP_NodeType.SceneEvent:
+                    if (node.values != null && node.values.Length > 0)
+                    {
+                        DSP_SceneEvent e = node.values[0].GetValue() as DSP_SceneEvent;
+                        e?.Raise();
+                    }
                     node = FollowSingleEdge(node); // auto-advance
                     break;
 
@@ -203,11 +212,6 @@ public class DSP_ConversationIterator
         var edges = _graph.GetOutgoingEdges(node);
         if (edges.Count == 0) return null;
         return _graph.GetNodes().FirstOrDefault(n => n.id == edges[0].toNode);
-    }
-
-    private void InvokeEventNode(DSP_NodeData node)
-    {
-        foreach (var e in node.finalEvents) e.Invoke();
     }
 }
 
