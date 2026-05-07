@@ -57,7 +57,7 @@ public class DSP_NodeGraphView : GraphView
     {
         style.flexGrow = 1;
 
-        ContentZoomer contentZoomer = new ContentZoomer { minScale = 0.5f, maxScale = 5f };
+        ContentZoomer contentZoomer = new ContentZoomer { minScale = 0.05f, maxScale = 5f };
         this.AddManipulator(contentZoomer);
         this.AddManipulator(new ContentDragger());
         this.AddManipulator(new SelectionDragger());
@@ -164,7 +164,8 @@ public class DSP_NodeGraphView : GraphView
                     values = new SerializableValue[]
                     {
                         new(dialogueNode.dialogueText),
-                        new(dialogueNode.characterAsset)
+                        new(dialogueNode.characterAsset),
+                        new(dialogueNode.dialogueAudioClip)
                     }
                 });
             }
@@ -460,6 +461,7 @@ public class DSP_DialogueNode : Node
 {
     public DSP_CharacterAsset characterAsset;
     public string dialogueText;
+    public AudioClip dialogueAudioClip;
 
     private Image characterPreviewImage;
     private Label characterPreviewLabel;
@@ -475,6 +477,9 @@ public class DSP_DialogueNode : Node
             
             if (values.Length > 1)
                 characterAsset = values[1].GetValue() as DSP_CharacterAsset;
+            
+            if (values.Length > 2)
+                dialogueAudioClip = values[2].GetValue() as AudioClip;
         }
 
         title = "Dialogue";
@@ -534,8 +539,32 @@ public class DSP_DialogueNode : Node
         previewContainer.Add(characterPreviewLabel);
         
         mainContainer.Add(previewContainer);
-        
-        
+
+        Label separator = new Label();
+        separator.style.height = 5;
+        mainContainer.Add(separator);
+
+        // Audio clip field
+        var audioLabel = new Label("Audio clip");
+        audioLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+        audioLabel.style.paddingTop = 2;
+        audioLabel.style.paddingBottom = 2;
+        audioLabel.style.paddingLeft = 2;
+        mainContainer.Add(audioLabel);
+
+        ObjectField audioField = new ObjectField()
+        {
+            objectType = typeof(AudioClip),
+            allowSceneObjects = false,
+            value = dialogueAudioClip
+        };
+        audioField.RegisterValueChangedCallback(evt => { dialogueAudioClip = evt.newValue as AudioClip; });
+        mainContainer.Add(audioField);
+
+        Label separator2 = new Label();
+        separator2.style.height = 5;
+        mainContainer.Add(separator2);
+
         // Dialogue label
         var textLabel = new Label("Text");
         textLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
