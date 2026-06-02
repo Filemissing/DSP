@@ -411,12 +411,12 @@ MonoBehaviour:
       stringArray: []
       boolArray: 
       objectArray: []
-    - type: 0
+    - type: 5
       intValue: 0
       floatValue: 0
       stringValue: 
       boolValue: 0
-      objectValue: {fileID: 0}
+      objectValue: {fileID: 8300000, guid: eec6b549fa5d0934ca5bd561a8dec0d9, type: 3}
       intArray: 
       floatArray: []
       stringArray: []
