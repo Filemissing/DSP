@@ -17,3 +17,12 @@ MonoBehaviour:
   continueSprite: {fileID: 0}
   mainFont: {fileID: 0}
   characterNameFont: {fileID: 0}
+  dialogueBoxAppearEffect: 9
+  dialogueBoxDisappearEffect: 12
+  continueButtonAppearEffect: 5
+  continueButtonDisappearEffect: 7
+  optionsAppearEffect: 16
+  optionsDisappearEffect: 17
+  characterAppearEffect: 1
+  characterDisappearEffect: 3
+  textRevealEffect: 21

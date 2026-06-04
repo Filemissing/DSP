@@ -537,6 +537,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentConversation: {fileID: 11400000, guid: 6dbc001a0cb9be544817078c3049063d, type: 2}
+  settings: {fileID: 11400000, guid: 162ea4e7b31d3464585e877f3c04ffbc, type: 2}
+  debugMode: 0
 --- !u!1 &508393011
 GameObject:
   m_ObjectHideFlags: 0
@@ -1355,6 +1357,11 @@ MonoBehaviour:
   characterNameText: {fileID: 1433890206}
   characterImage: {fileID: 1042817093}
   continueButton: {fileID: 545160016}
+  dialogueBoxTarget: {fileID: 1348316249}
+  continueButtonTarget: {fileID: 545160014}
+  characterImageTarget: {fileID: 1042817091}
+  characterNameTarget: {fileID: 1433890204}
+  dialogueTextTarget: {fileID: 53085049}
 --- !u!224 &1377399039 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6944079438989485247, guid: 1e6ce0b02497bc74699265d8eca7cae2, type: 3}

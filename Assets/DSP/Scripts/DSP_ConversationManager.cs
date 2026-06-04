@@ -6,7 +6,8 @@ public class DSP_ConversationManager : MonoBehaviour
 {
     public DSP_ConversationGraphAsset currentConversation;
     
-    [Header("Debug Settings")]
+    [Header("Settings")]
+    public DSP_SettingsObject settings;
     public bool debugMode = false;
     
     private DSP_ConversationIterator iterator;
