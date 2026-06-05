@@ -15,7 +15,7 @@ MonoBehaviour:
   nodes:
   - id: 0
     nodeType: 0
-    position: {x: 366, y: 300}
+    position: {x: 366.40002, y: 300}
     values: []
     eventParameters: []
     finalEvents: []
@@ -38,7 +38,7 @@ MonoBehaviour:
         objectArray: []
   - id: 1
     nodeType: 2
-    position: {x: 926, y: 300}
+    position: {x: 926.4, y: 300}
     values:
     - type: 3
       intValue: 0
@@ -94,7 +94,7 @@ MonoBehaviour:
         objectArray: []
   - id: 2
     nodeType: 2
-    position: {x: 508.66666, y: 300}
+    position: {x: 508.80002, y: 300}
     values:
     - type: 3
       intValue: 0
@@ -152,7 +152,7 @@ MonoBehaviour:
         objectArray: []
   - id: 3
     nodeType: 1
-    position: {x: 2054, y: 452}
+    position: {x: 2054.4, y: 452}
     values:
     - type: 1
       intValue: 3
@@ -186,7 +186,7 @@ MonoBehaviour:
         objectArray: []
   - id: 4
     nodeType: 6
-    position: {x: 906.6667, y: 570}
+    position: {x: 907.2, y: 570.4}
     values:
     - type: 5
       intValue: 0
@@ -215,7 +215,7 @@ MonoBehaviour:
       intValue: 0
       floatValue: 0
       stringValue: 
-      boolValue: 1
+      boolValue: 0
       objectValue: {fileID: 0}
       intArray: 
       floatArray: []
@@ -234,7 +234,7 @@ MonoBehaviour:
         intValue: 0
         floatValue: 0
         stringValue: 
-        boolValue: 1
+        boolValue: 0
         objectValue: {fileID: 0}
         intArray: 
         floatArray: []
@@ -243,7 +243,7 @@ MonoBehaviour:
         objectArray: []
   - id: 5
     nodeType: 4
-    position: {x: 1552, y: 474.66666}
+    position: {x: 1552, y: 475.2}
     values:
     - type: 1
       intValue: 3
@@ -387,7 +387,7 @@ MonoBehaviour:
         objectArray: []
   - id: 6
     nodeType: 2
-    position: {x: 1286.6666, y: 686}
+    position: {x: 1287.2, y: 686.4}
     values:
     - type: 3
       intValue: 0
@@ -443,7 +443,7 @@ MonoBehaviour:
         objectArray: []
   - id: 7
     nodeType: 2
-    position: {x: 1286.6666, y: 474.66666}
+    position: {x: 1287.2, y: 475.2}
     values:
     - type: 3
       intValue: 0
@@ -499,7 +499,7 @@ MonoBehaviour:
         objectArray: []
   - id: 8
     nodeType: 3
-    position: {x: 758.6667, y: 396.66666}
+    position: {x: 759.2, y: 396.80002}
     values:
     - type: 8
       intValue: 0
@@ -534,6 +534,62 @@ MonoBehaviour:
         stringArray: []
         boolArray: 
         objectArray: []
+  - id: 9
+    nodeType: 2
+    position: {x: 1352, y: 153.59999}
+    values:
+    - type: 3
+      intValue: 0
+      floatValue: 0
+      stringValue: HELLO
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    - type: 5
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 11400000, guid: 92578d1debabeca4e87ac875ce29c8db, type: 2}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    - type: 0
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    eventParameters: []
+    finalEvents: []
+    finalCondition:
+      target: {fileID: 0}
+      methodName: 
+      staticTypeName: 
+      isStatic: 0
+      parameter:
+        type: 0
+        intValue: 0
+        floatValue: 0
+        stringValue: 
+        boolValue: 0
+        objectValue: {fileID: 0}
+        intArray: 
+        floatArray: []
+        stringArray: []
+        boolArray: 
+        objectArray: []
   edges:
   - fromNode: 0
     outPortID: 0
@@ -541,7 +597,7 @@ MonoBehaviour:
     inPortID: 0
   - fromNode: 1
     outPortID: 0
-    toNode: 3
+    toNode: 9
     inPortID: 0
   - fromNode: 2
     outPortID: 0
@@ -578,4 +634,8 @@ MonoBehaviour:
   - fromNode: 8
     outPortID: 1
     toNode: 4
+    inPortID: 0
+  - fromNode: 9
+    outPortID: 0
+    toNode: 3
     inPortID: 0

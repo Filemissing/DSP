@@ -36,13 +36,10 @@ public class DSP_DialogueBoxVisualizer : MonoBehaviour
             conversationManager.OnChoiceNode += OnChoiceNode;
         }
         
-        continueButton.onClick.AddListener(OnContinueClicked);
-        continueButton.gameObject.SetActive(false);
+        DisableContinueButton();
         gameObject.SetActive(false);
         
         ApplySettings();
-        characterNameText.gameObject.SetActive(false);
-        characterImage.gameObject.SetActive(false);
     }
     
     void OnDestroy()
@@ -94,7 +91,8 @@ public class DSP_DialogueBoxVisualizer : MonoBehaviour
     
     private void OnConversationEnded()
     {
-        StartCoroutine(PlayDialogueBoxDisappearEffect());
+        if (gameObject.activeSelf)
+            StartCoroutine(PlayDialogueBoxDisappearEffect());
     }
     
     private void OnDialogueNode(string dialogue, string characterName, Sprite characterSprite)
@@ -111,7 +109,7 @@ public class DSP_DialogueBoxVisualizer : MonoBehaviour
             characterNameText.gameObject.SetActive(true);
             if (characterChanged)
             {
-                DSP_Effects.PlayEffect(settings.characterAppearEffect, characterNameTarget, 0.3f, AnimationCurve.EaseInOut(0, 0, 1, 1));
+                //DSP_Effects.PlayEffect(settings.characterAppearEffect, characterNameTarget, 0.3f, AnimationCurve.EaseInOut(0, 0, 1, 1));
             }
         }
         else
@@ -125,7 +123,7 @@ public class DSP_DialogueBoxVisualizer : MonoBehaviour
             characterImage.gameObject.SetActive(true);
             if (characterChanged)
             {
-                DSP_Effects.PlayEffect(settings.characterAppearEffect, characterImageTarget, 0.3f, AnimationCurve.EaseInOut(0, 0, 1, 1));
+                //DSP_Effects.PlayEffect(settings.characterAppearEffect, characterImageTarget, 0.3f, AnimationCurve.EaseInOut(0, 0, 1, 1));
             }
         }
         else
@@ -133,31 +131,37 @@ public class DSP_DialogueBoxVisualizer : MonoBehaviour
             characterImage.gameObject.SetActive(false);
         }
         
-        DSP_Effects.PlayEffect(settings.textRevealEffect, dialogueTextTarget, 0.5f, AnimationCurve.Linear(0, 0, 1, 1));
+        //DSP_Effects.PlayEffect(settings.textRevealEffect, dialogueTextTarget, 0.5f, AnimationCurve.Linear(0, 0, 1, 1));
         
+        DSP_NodeData nextNode = PeekNextNode();
+        if (nextNode.nodeType != DSP_NodeType.Choice)
+        {
+            EnableContinueButton();
+        }
+        
+        /*
         DSP_NodeData nextNode = PeekNextNode();
         if (nextNode == null || nextNode.nodeType != DSP_NodeType.Choice)
         {
-            DSP_Effects.PlayEffect(settings.continueButtonAppearEffect, continueButtonTarget, 0.3f, AnimationCurve.EaseInOut(0, 0, 1, 1));
-            continueButton.gameObject.SetActive(true);
+            EnableContinueButton();
         }
+        */
     }
     
     private void OnChoiceNode(string[] choices)
     {
-        DSP_Effects.PlayEffect(settings.continueButtonDisappearEffect, continueButtonTarget, 0.2f, AnimationCurve.EaseInOut(0, 0, 1, 1));
-        continueButton.gameObject.SetActive(false);
+        DisableContinueButton();
     }
     
     private IEnumerator PlayDialogueBoxAppearEffect()
     {
-        DSP_Effects.PlayEffect(settings.dialogueBoxAppearEffect, dialogueBoxTarget, 0.4f, AnimationCurve.EaseInOut(0, 0, 1, 1));
+        //DSP_Effects.PlayEffect(settings.dialogueBoxAppearEffect, dialogueBoxTarget, 0.4f, AnimationCurve.EaseInOut(0, 0, 1, 1));
         yield return new WaitForSeconds(0.4f);
     }
 
     private IEnumerator PlayDialogueBoxDisappearEffect()
     {
-        DSP_Effects.PlayEffect(settings.dialogueBoxDisappearEffect, dialogueBoxTarget, 0.3f, AnimationCurve.EaseInOut(0, 0, 1, 1));
+        //DSP_Effects.PlayEffect(settings.dialogueBoxDisappearEffect, dialogueBoxTarget, 0.3f, AnimationCurve.EaseInOut(0, 0, 1, 1));
         yield return new WaitForSeconds(0.3f);
         gameObject.SetActive(false);
     }
@@ -167,21 +171,41 @@ public class DSP_DialogueBoxVisualizer : MonoBehaviour
         if (conversationManager == null || conversationManager.currentConversation == null)
             return null;
             
-        var iterator = new DSP_ConversationIterator(conversationManager.currentConversation);
+        var iterator = conversationManager.iterator;
+        
         var edges = conversationManager.currentConversation.GetOutgoingEdges(iterator.CurrentNode);
-        if (edges.Count == 0)
-            return null;
-            
-        return conversationManager.currentConversation.GetNodes().FirstOrDefault(n => n.id == edges[0].toNode);
+        var next = edges.Count > 0
+            ? conversationManager.currentConversation.GetNodes().FirstOrDefault(n => n.id == edges[0].toNode)
+            : null;
+
+
+        return next;
+    }
+
+    void EnableContinueButton()
+    {
+        continueButton.GetComponent<CanvasGroup>().interactable = true;
+        continueButton.GetComponent<CanvasGroup>().blocksRaycasts = true;
+        continueButton.GetComponent<CanvasGroup>().alpha = 1;
+        
+        // Effect
+        //DSP_Effects.PlayEffect(settings.continueButtonAppearEffect, continueButtonTarget, 0.3f, AnimationCurve.EaseInOut(0, 0, 1, 1));
     }
     
-    private void OnContinueClicked()
+    void DisableContinueButton()
+    {
+        continueButton.GetComponent<CanvasGroup>().interactable = false;
+        continueButton.GetComponent<CanvasGroup>().blocksRaycasts = false;
+        continueButton.GetComponent<CanvasGroup>().alpha = 0;
+        
+        // Effect
+        //DSP_Effects.PlayEffect(settings.continueButtonDisappearEffect, continueButtonTarget, 0.2f, AnimationCurve.EaseInOut(0, 0, 1, 1));
+    }
+    
+    public void OnContinueClicked()
     {
         if (conversationManager.IsAtChoiceNode)
-        {
-            if (conversationManager.debugMode) Debug.LogWarning("[DSP] Cannot continue - waiting for choice selection");
             return;
-        }
         
         conversationManager.Advance();
     }

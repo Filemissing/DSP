@@ -13,6 +13,7 @@ public class DSP_SettingsObject : ScriptableObject
     public TMP_FontAsset mainFont;
     public TMP_FontAsset characterNameFont;
 
+    /*
     [Header("Dialogue Box Effects")]
     public DSP_EffectType dialogueBoxAppearEffect = DSP_EffectType.DialogueBoxAppearFade;
     public DSP_EffectType dialogueBoxDisappearEffect = DSP_EffectType.DialogueBoxDisappearFade;
@@ -31,4 +32,5 @@ public class DSP_SettingsObject : ScriptableObject
     
     [Header("Text Effects")]
     public DSP_EffectType textRevealEffect = DSP_EffectType.TextRevealTypewriter;
+    */
 }

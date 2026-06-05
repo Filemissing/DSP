@@ -155,7 +155,7 @@ public class DSP_ConversationIterator
     }
 
     // -------------------------------------------------------------------------
-    // Core stepping logic — runs forward automatically through
+    // Core stepping logic runs forward automatically through
     // Start/End/Event nodes, pauses on Dialogue/Choice.
     // -------------------------------------------------------------------------
     private void StepTo(DSP_NodeData node)
@@ -167,7 +167,7 @@ public class DSP_ConversationIterator
             switch (node.nodeType)
             {
                 case DSP_NodeType.Start:
-                    // Transparent — just follow the single outgoing edge
+                    // Transparent ï¿½ just follow the single outgoing edge
                     node = FollowSingleEdge(node);
                     break;
 

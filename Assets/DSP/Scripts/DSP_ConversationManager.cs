@@ -8,11 +8,10 @@ public class DSP_ConversationManager : MonoBehaviour
     
     [Header("Settings")]
     public DSP_SettingsObject settings;
-    public bool debugMode = false;
     
-    private DSP_ConversationIterator iterator;
+    public DSP_ConversationIterator iterator;
     private Coroutine currentConversationRoutine;
-    private bool waitingForUserInput = false;
+    [SerializeField] private bool waitingForUserInput = false;
     
     // Delegate definitions
     public delegate void ConversationEventHandler();
@@ -41,13 +40,11 @@ public class DSP_ConversationManager : MonoBehaviour
     {
         if (conversation == null)
         {
-            if (debugMode) Debug.LogError("[DSP] No conversation provided!");
             return;
         }
         
         if (IsConversationActive)
         {
-            if (debugMode) Debug.LogWarning("[DSP] Conversation already in progress. Ending current conversation.");
             EndConversation();
         }
         
@@ -57,8 +54,7 @@ public class DSP_ConversationManager : MonoBehaviour
         IsAtChoiceNode = false;
         waitingForUserInput = false;
         
-        if (debugMode) Debug.Log($"[DSP] Starting conversation: {conversation.name}");
-        FireEvent(OnConversationStarted, "OnConversationStarted");
+        OnConversationStarted?.Invoke();
         
         if (currentConversationRoutine != null)
             StopCoroutine(currentConversationRoutine);
@@ -72,8 +68,6 @@ public class DSP_ConversationManager : MonoBehaviour
         {
             var currentNode = iterator.CurrentNode;
             
-            if (debugMode) Debug.Log($"[DSP] Processing node: {currentNode.nodeType} (ID: {currentNode.id})");
-            
             switch (currentNode.nodeType)
             {
                 case DSP_NodeType.Dialogue:
@@ -84,13 +78,11 @@ public class DSP_ConversationManager : MonoBehaviour
                     DSP_NodeData nextNode = PeekNextNode();
                     if (nextNode != null && nextNode.nodeType == DSP_NodeType.Choice)
                     {
-                        if (debugMode) Debug.Log("[DSP] Dialogue followed by choice - auto-advancing");
                         waitingForUserInput = false;
                         iterator.Advance();
                     }
                     else
                     {
-                        if (debugMode) Debug.Log("[极DSP] Waiting for user input to continue...");
                         yield return new WaitUntil(() => !waitingForUserInput);
                     }
                     break;
@@ -99,30 +91,19 @@ public class DSP_ConversationManager : MonoBehaviour
                     IsAtChoiceNode = true;
                     waitingForUserInput = true;
                     HandleChoiceNode(currentNode);
-                    if (debugMode) Debug.Log("[DSP] Waiting for choice selection...");
                     yield return new WaitUntil(() => !waitingForUserInput);
                     IsAtChoiceNode = false;
-                    break;
-                    
-                case DSP_NodeType.Event:
-                    IsAtChoiceNode = false;
-                    waitingForUserInput = false;
-                    HandleEventNode(currentNode);
-                    if (debugMode) Debug.Log("[DSP] Event node - auto-advancing");
-                    iterator.Advance();
                     break;
                     
                 default:
                     IsAtChoiceNode = false;
                     waitingForUserInput = false;
-                    if (debugMode) Debug.Log($"[DSP] Default node ({currentNode.nodeType}) - auto-advancing");
                     iterator.Advance();
                     break;
             }
             
             if (iterator.State == DSP_IteratorState.Finished)
             {
-                if (debugMode) Debug.Log("[DSP] Conversation finished");
                 break;
             }
         }
@@ -157,8 +138,7 @@ public class DSP_ConversationManager : MonoBehaviour
             characterImage = characterAsset.characterImage;
         }
         
-        if (debugMode) Debug.Log($"[DSP] Dialogue: '{dialogueText}' by {characterName}");
-        FireEvent(OnDialogueNode, "OnDialogueNode", dialogueText, characterName, characterImage);
+        OnDialogueNode?.Invoke(dialogueText, characterName, characterImage);
     }
     
     private void HandleChoiceNode(DSP_NodeData node)
@@ -170,39 +150,15 @@ public class DSP_ConversationManager : MonoBehaviour
             choices = choicesArray;
         }
         
-        if (choices != null)
-        {
-            if (debugMode) Debug.Log($"[DSP] Choice node with {choices.Length} options: {string.Join(", ", choices)}");
-        }
-        else
-        {
-            if (debugMode) Debug.LogWarning("[DSP] Choice node has no valid choices array");
-        }
-        
-        FireEvent(OnChoiceNode, "OnChoiceNode", choices);
-    }
-    
-    private void HandleEventNode(DSP_NodeData node)
-    {
-        if (debugMode) Debug.Log("[DSP] Event node triggered");
-        FireEvent(OnEventNode, "OnEventNode");
+        OnChoiceNode?.Invoke(choices);
     }
     
     public void Advance()
     {
         if (waitingForUserInput && !IsAtChoiceNode)
         {
-            if (debugMode) Debug.Log("[DSP] Advancing to next node");
             waitingForUserInput = false;
             iterator.Advance();
-        }
-        else if (IsAtChoiceNode)
-        {
-            if (debugMode) Debug.LogWarning("[DSP] Cannot use Advance() on a Choice node. Use AdvanceChoice(choiceIndex) instead.");
-        }
-        else
-        {
-            if (debugMode) Debug.LogWarning("[DSP] Cannot advance - not waiting for user input");
         }
     }
     
@@ -210,17 +166,8 @@ public class DSP_ConversationManager : MonoBehaviour
     {
         if (waitingForUserInput && IsAtChoiceNode)
         {
-            if (debugMode) Debug.Log($"[DSP] Advancing with choice index: {choiceIndex}");
             waitingForUserInput = false;
             iterator.Advance(choiceIndex);
-        }
-        else if (!IsAtChoiceNode)
-        {
-            if (debugMode) Debug.LogWarning("[DSP] Cannot use AdvanceChoice() on a non-Choice node. Use Advance() instead.");
-        }
-        else
-        {
-            if (debugMode) Debug.LogWarning("[DSP] Cannot advance choice - not waiting for user input");
         }
     }
     
@@ -237,27 +184,7 @@ public class DSP_ConversationManager : MonoBehaviour
         IsAtChoiceNode = false;
         waitingForUserInput = false;
         
-        if (debugMode) Debug.Log("[DSP] Conversation ended");
-        FireEvent(OnConversationEnded, "OnConversationEnded");
-    }
-    
-    // Event firing methods with debug logging
-    private void FireEvent(ConversationEventHandler eventHandler, string eventName)
-    {
-        if (debugMode) Debug.Log($"[DSP] Firing event: {eventName} (Subscribers: {eventHandler?.GetInvocationList()?.Length ?? 0})");
-        eventHandler?.Invoke();
-    }
-    
-    private void FireEvent(DialogueEventHandler eventHandler, string eventName, string dialogue, string characterName, Sprite characterSprite)
-    {
-        if (debugMode) Debug.Log($"[DSP] Firing event: {eventName} (Subscribers: {eventHandler?.GetInvocationList()?.Length ?? 0})");
-        eventHandler?.Invoke(dialogue, characterName, characterSprite);
-    }
-    
-    private void FireEvent(ChoiceEventHandler eventHandler, string eventName, string[] choices)
-    {
-        if (debugMode) Debug.Log($"[DSP] Firing event: {eventName} (Subscribers: {eventHandler?.GetInvocationList()?.Length ?? 0})");
-        eventHandler?.Invoke(choices);
+        OnConversationEnded?.Invoke();
     }
     
     public static DSP_ConversationManager GetInstance()

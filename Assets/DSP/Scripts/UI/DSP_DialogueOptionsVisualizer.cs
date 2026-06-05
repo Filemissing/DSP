@@ -82,7 +82,7 @@ public class DSP_DialogueOptionsVisualizer : MonoBehaviour
             int choiceIndex = i;
             GameObject optionButton = Instantiate(optionButtonPrefab, optionsContainer.transform);
             ApplyButtonSettings(optionButton, choices[i], choiceIndex);
-            DSP_Effects.PlayEffect(settings.optionsAppearEffect, optionButton, 0.3f, AnimationCurve.EaseInOut(0, 0, 1, 1));
+            //DSP_Effects.PlayEffect(settings.optionsAppearEffect, optionButton, 0.3f, AnimationCurve.EaseInOut(0, 0, 1, 1));
         }
         
         yield return new WaitForSeconds(0.3f);
@@ -92,7 +92,7 @@ public class DSP_DialogueOptionsVisualizer : MonoBehaviour
     {
         foreach (Transform child in optionsContainer.transform)
         {
-            DSP_Effects.PlayEffect(settings.optionsDisappearEffect, child.gameObject, 0.2f, AnimationCurve.EaseInOut(0, 0, 1, 1));
+            //DSP_Effects.PlayEffect(settings.optionsDisappearEffect, child.gameObject, 0.2f, AnimationCurve.EaseInOut(0, 0, 1, 1));
         }
         
         yield return new WaitForSeconds(0.2f);
