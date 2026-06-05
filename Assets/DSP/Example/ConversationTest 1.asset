@@ -15,7 +15,7 @@ MonoBehaviour:
   nodes:
   - id: 0
     nodeType: 0
-    position: {x: 366.40002, y: 300}
+    position: {x: 366.66666, y: 300}
     values: []
     eventParameters: []
     finalEvents: []
@@ -38,7 +38,7 @@ MonoBehaviour:
         objectArray: []
   - id: 1
     nodeType: 2
-    position: {x: 926.4, y: 300}
+    position: {x: 926.6667, y: 300}
     values:
     - type: 3
       intValue: 0
@@ -93,66 +93,8 @@ MonoBehaviour:
         boolArray: 
         objectArray: []
   - id: 2
-    nodeType: 2
-    position: {x: 508.80002, y: 300}
-    values:
-    - type: 3
-      intValue: 0
-      floatValue: 0
-      stringValue: 'My name''s Jeff.
-
-        yippeyayay'
-      boolValue: 0
-      objectValue: {fileID: 0}
-      intArray: 
-      floatArray: []
-      stringArray: []
-      boolArray: 
-      objectArray: []
-    - type: 5
-      intValue: 0
-      floatValue: 0
-      stringValue: 
-      boolValue: 0
-      objectValue: {fileID: 11400000, guid: 92578d1debabeca4e87ac875ce29c8db, type: 2}
-      intArray: 
-      floatArray: []
-      stringArray: []
-      boolArray: 
-      objectArray: []
-    - type: 5
-      intValue: 0
-      floatValue: 0
-      stringValue: 
-      boolValue: 0
-      objectValue: {fileID: 8300000, guid: eec6b549fa5d0934ca5bd561a8dec0d9, type: 3}
-      intArray: 
-      floatArray: []
-      stringArray: []
-      boolArray: 
-      objectArray: []
-    eventParameters: []
-    finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
-  - id: 3
     nodeType: 1
-    position: {x: 2054.4, y: 452}
+    position: {x: 2054.6667, y: 452}
     values:
     - type: 1
       intValue: 3
@@ -184,9 +126,9 @@ MonoBehaviour:
         stringArray: []
         boolArray: 
         objectArray: []
-  - id: 4
+  - id: 3
     nodeType: 6
-    position: {x: 907.2, y: 570.4}
+    position: {x: 907.3333, y: 570}
     values:
     - type: 5
       intValue: 0
@@ -241,9 +183,9 @@ MonoBehaviour:
         stringArray: []
         boolArray: 
         objectArray: []
-  - id: 5
+  - id: 4
     nodeType: 4
-    position: {x: 1552, y: 475.2}
+    position: {x: 1552, y: 474.66666}
     values:
     - type: 1
       intValue: 3
@@ -385,9 +327,9 @@ MonoBehaviour:
         stringArray: []
         boolArray: 
         objectArray: []
-  - id: 6
+  - id: 5
     nodeType: 2
-    position: {x: 1287.2, y: 686.4}
+    position: {x: 1287.3334, y: 686}
     values:
     - type: 3
       intValue: 0
@@ -441,9 +383,9 @@ MonoBehaviour:
         stringArray: []
         boolArray: 
         objectArray: []
-  - id: 7
+  - id: 6
     nodeType: 2
-    position: {x: 1287.2, y: 475.2}
+    position: {x: 1287.3334, y: 474.66666}
     values:
     - type: 3
       intValue: 0
@@ -497,9 +439,9 @@ MonoBehaviour:
         stringArray: []
         boolArray: 
         objectArray: []
-  - id: 8
+  - id: 7
     nodeType: 3
-    position: {x: 759.2, y: 396.80002}
+    position: {x: 759.3333, y: 396.66666}
     values:
     - type: 8
       intValue: 0
@@ -534,9 +476,9 @@ MonoBehaviour:
         stringArray: []
         boolArray: 
         objectArray: []
-  - id: 9
+  - id: 8
     nodeType: 2
-    position: {x: 1352, y: 153.59999}
+    position: {x: 1352, y: 153.33334}
     values:
     - type: 3
       intValue: 0
@@ -590,52 +532,110 @@ MonoBehaviour:
         stringArray: []
         boolArray: 
         objectArray: []
+  - id: 9
+    nodeType: 2
+    position: {x: 473.33334, y: 300}
+    values:
+    - type: 3
+      intValue: 0
+      floatValue: 0
+      stringValue: 'My name''s Jeff.
+
+        yippeyayay'
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    - type: 5
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 11400000, guid: 92578d1debabeca4e87ac875ce29c8db, type: 2}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    - type: 5
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 8300000, guid: eec6b549fa5d0934ca5bd561a8dec0d9, type: 3}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    eventParameters: []
+    finalEvents: []
+    finalCondition:
+      target: {fileID: 0}
+      methodName: 
+      staticTypeName: 
+      isStatic: 0
+      parameter:
+        type: 0
+        intValue: 0
+        floatValue: 0
+        stringValue: 
+        boolValue: 0
+        objectValue: {fileID: 0}
+        intArray: 
+        floatArray: []
+        stringArray: []
+        boolArray: 
+        objectArray: []
   edges:
   - fromNode: 0
     outPortID: 0
-    toNode: 2
+    toNode: 9
     inPortID: 0
   - fromNode: 1
     outPortID: 0
-    toNode: 9
-    inPortID: 0
-  - fromNode: 2
-    outPortID: 0
     toNode: 8
     inPortID: 0
-  - fromNode: 4
+  - fromNode: 3
     outPortID: 0
-    toNode: 7
-    inPortID: 0
-  - fromNode: 4
-    outPortID: 1
     toNode: 6
     inPortID: 0
-  - fromNode: 5
-    outPortID: 0
-    toNode: 3
-    inPortID: 1
-  - fromNode: 6
-    outPortID: 0
-    toNode: 3
-    inPortID: 2
-  - fromNode: 7
-    outPortID: 0
+  - fromNode: 3
+    outPortID: 1
     toNode: 5
     inPortID: 0
-  - fromNode: 8
+  - fromNode: 4
+    outPortID: 0
+    toNode: 2
+    inPortID: 1
+  - fromNode: 5
+    outPortID: 0
+    toNode: 2
+    inPortID: 2
+  - fromNode: 6
+    outPortID: 0
+    toNode: 4
+    inPortID: 0
+  - fromNode: 7
     outPortID: 0
     toNode: 1
     inPortID: 0
-  - fromNode: 8
+  - fromNode: 7
     outPortID: 2
-    toNode: 4
+    toNode: 3
+    inPortID: 0
+  - fromNode: 7
+    outPortID: 1
+    toNode: 3
     inPortID: 0
   - fromNode: 8
-    outPortID: 1
-    toNode: 4
+    outPortID: 0
+    toNode: 2
     inPortID: 0
   - fromNode: 9
     outPortID: 0
-    toNode: 3
+    toNode: 7
     inPortID: 0

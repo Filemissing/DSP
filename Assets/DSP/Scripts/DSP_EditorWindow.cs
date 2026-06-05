@@ -46,6 +46,15 @@ public class DSP_EditorWindow : EditorWindow
         toolbar.Add(saveButton);
         rootVisualElement.Add(toolbar);
         rootVisualElement.Add(graphView);
+
+        rootVisualElement.RegisterCallback<KeyDownEvent>(evt =>
+        {
+            if (evt.keyCode == KeyCode.S && evt.ctrlKey)
+            {
+                graphView.SaveToAsset(dialogueGraphAsset);
+                evt.StopPropagation();
+            }
+        });
     }
 }
 
@@ -483,22 +492,23 @@ public class DSP_DialogueNode : Node
         }
 
         title = "Dialogue";
-        style.width = 200;
         this.FixTransparency();
 
         this.AddInputPort();
         this.AddOutputPort();
 
-        
+        VisualElement characterContainer = new VisualElement();
+        characterContainer.style.flexDirection = FlexDirection.Row;
+        characterContainer.style.flexGrow = 1;
+        characterContainer.style.flexShrink = 1;
+        characterContainer.style.alignItems = Align.Center;
+
         // Character label
         var characterLabel = new Label("Character");
         characterLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-        characterLabel.style.paddingTop = 2;
-        characterLabel.style.paddingBottom = 2;
         characterLabel.style.paddingLeft = 2;
         
-        mainContainer.Add(characterLabel);
-        
+        characterContainer.Add(characterLabel);
         
         // CharacterField
         ObjectField characterField = new ObjectField()
@@ -513,13 +523,13 @@ public class DSP_DialogueNode : Node
             characterAsset = evt.newValue as DSP_CharacterAsset;
             UpdateCharacterPreview();
         });
-        mainContainer.Add(characterField);
-        
-        
-        // Preview container (hidden if characterField is nil)
+        characterContainer.Add(characterField);
+
+        mainContainer.Add(characterContainer);
+
+        // Preview container (hidden if characterField is null)
         previewContainer = new VisualElement();
         previewContainer.style.flexDirection = FlexDirection.Row;
-        previewContainer.style.marginTop = 4;
         previewContainer.style.alignItems = Align.Center;
         
         // Portrait image
@@ -541,16 +551,20 @@ public class DSP_DialogueNode : Node
         mainContainer.Add(previewContainer);
 
         Label separator = new Label();
-        separator.style.height = 5;
+        separator.style.height = 10;
         mainContainer.Add(separator);
+
+        VisualElement audioContainer = new VisualElement();
+        audioContainer.style.flexDirection = FlexDirection.Row;
+        audioContainer.style.flexGrow = 1;
+        audioContainer.style.flexShrink = 1;
+        audioContainer.style.alignItems = Align.Center;
 
         // Audio clip field
         var audioLabel = new Label("Audio clip");
         audioLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-        audioLabel.style.paddingTop = 2;
-        audioLabel.style.paddingBottom = 2;
         audioLabel.style.paddingLeft = 2;
-        mainContainer.Add(audioLabel);
+        audioContainer.Add(audioLabel);
 
         ObjectField audioField = new ObjectField()
         {
@@ -558,8 +572,11 @@ public class DSP_DialogueNode : Node
             allowSceneObjects = false,
             value = dialogueAudioClip
         };
+        audioField.style.alignSelf = Align.FlexEnd;
         audioField.RegisterValueChangedCallback(evt => { dialogueAudioClip = evt.newValue as AudioClip; });
-        mainContainer.Add(audioField);
+        audioContainer.Add(audioField);
+
+        mainContainer.Add(audioContainer);
 
         Label separator2 = new Label();
         separator2.style.height = 5;
@@ -581,6 +598,7 @@ public class DSP_DialogueNode : Node
             value = dialogueText,
             multiline = true
         };
+        textField.style.flexWrap = Wrap.Wrap;
 
         textField.RegisterValueChangedCallback(evt => dialogueText = evt.newValue);
         mainContainer.Add(textField);
