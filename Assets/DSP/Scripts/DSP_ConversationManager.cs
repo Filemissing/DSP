@@ -4,6 +4,18 @@ using System.Linq;
 
 public class DSP_ConversationManager : MonoBehaviour
 {
+    public static DSP_ConversationManager instance;
+    public void Awake()
+    {
+        if (instance != null && instance != this)
+            Destroy(this);
+        else
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+    }
+    
     public DSP_ConversationGraphAsset currentConversation;
     
     [Header("Settings")]

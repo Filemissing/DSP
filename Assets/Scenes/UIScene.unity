@@ -901,6 +901,7 @@ GameObject:
   - component: {fileID: 1042817092}
   - component: {fileID: 1042817094}
   - component: {fileID: 1042817093}
+  - component: {fileID: 1042817095}
   m_Layer: 5
   m_Name: CharacterSprite
   m_TagString: Untagged
@@ -965,6 +966,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1042817091}
   m_CullTransparentMesh: 1
+--- !u!225 &1042817095
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1042817091}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1142051110
 GameObject:
   m_ObjectHideFlags: 0
@@ -1298,6 +1311,7 @@ GameObject:
   - component: {fileID: 1348316253}
   - component: {fileID: 1348316252}
   - component: {fileID: 1348316251}
+  - component: {fileID: 1348316254}
   m_Layer: 5
   m_Name: DialogueBox
   m_TagString: Untagged
@@ -1378,15 +1392,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78ddd094a88969c499e33f00f1d53305, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dialogueText: {fileID: 53085051}
   characterNameText: {fileID: 1433890206}
   characterImage: {fileID: 1042817093}
   continueButton: {fileID: 545160016}
   dialogueBoxTarget: {fileID: 1348316249}
   continueButtonTarget: {fileID: 545160014}
   characterImageTarget: {fileID: 1042817091}
-  characterNameTarget: {fileID: 1433890204}
+  characterNameBoxTarget: {fileID: 1434821758}
   dialogueTextTarget: {fileID: 53085049}
+--- !u!225 &1348316254
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1348316249}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!224 &1377399039 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6944079438989485247, guid: 1e6ce0b02497bc74699265d8eca7cae2, type: 3}
@@ -1540,6 +1565,7 @@ GameObject:
   - component: {fileID: 1434821759}
   - component: {fileID: 1434821761}
   - component: {fileID: 1434821760}
+  - component: {fileID: 1434821762}
   m_Layer: 5
   m_Name: NameBox
   m_TagString: Untagged
@@ -1605,6 +1631,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1434821758}
   m_CullTransparentMesh: 1
+--- !u!225 &1434821762
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1434821758}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1472428342
 GameObject:
   m_ObjectHideFlags: 0

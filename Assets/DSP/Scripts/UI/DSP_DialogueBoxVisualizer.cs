@@ -7,7 +7,6 @@ using System.Collections;
 public class DSP_DialogueBoxVisualizer : MonoBehaviour
 {
     [Header("UI References")]
-    public TextMeshProUGUI dialogueText;
     public TextMeshProUGUI characterNameText;
     public Image characterImage;
     public Button continueButton;
@@ -16,7 +15,7 @@ public class DSP_DialogueBoxVisualizer : MonoBehaviour
     public GameObject dialogueBoxTarget;
     public GameObject continueButtonTarget;
     public GameObject characterImageTarget;
-    public GameObject characterNameTarget;
+    public GameObject characterNameBoxTarget;
     public GameObject dialogueTextTarget;
     
     private DSP_ConversationManager conversationManager;
@@ -36,8 +35,8 @@ public class DSP_DialogueBoxVisualizer : MonoBehaviour
             conversationManager.OnChoiceNode += OnChoiceNode;
         }
         
-        DisableContinueButton();
-        gameObject.SetActive(false);
+        DSP_EffectsHandler.DisappearContinueButton(continueButton.gameObject);
+        DSP_EffectsHandler.DisappearDialogueBox(gameObject);
         
         ApplySettings();
     }
@@ -63,11 +62,6 @@ public class DSP_DialogueBoxVisualizer : MonoBehaviour
             dialogueBoxImage.sprite = settings.textboxSprite;
         }
         
-        if (dialogueText != null && settings.mainFont != null)
-        {
-            dialogueText.font = settings.mainFont;
-        }
-        
         if (characterNameText != null && settings.characterNameFont != null)
         {
             characterNameText.font = settings.characterNameFont;
@@ -85,85 +79,56 @@ public class DSP_DialogueBoxVisualizer : MonoBehaviour
     
     private void OnConversationStarted()
     {
-        gameObject.SetActive(true);
-        StartCoroutine(PlayDialogueBoxAppearEffect());
+        DSP_EffectsHandler.AppearDialogueBox(gameObject);
     }
     
     private void OnConversationEnded()
     {
         if (gameObject.activeSelf)
-            StartCoroutine(PlayDialogueBoxDisappearEffect());
+            DSP_EffectsHandler.DisappearDialogueBox(gameObject);
     }
     
     private void OnDialogueNode(string dialogue, string characterName, Sprite characterSprite)
     {
-        dialogueText.text = dialogue;
-        
         bool characterChanged = currentCharacterName != characterName || currentCharacterSprite != characterSprite;
+        
+        DSP_EffectsHandler.RevealText(dialogueTextTarget, dialogue);
         currentCharacterName = characterName;
         currentCharacterSprite = characterSprite;
         
         if (!string.IsNullOrEmpty(characterName))
         {
             characterNameText.text = characterName;
-            characterNameText.gameObject.SetActive(true);
             if (characterChanged)
             {
-                //DSP_Effects.PlayEffect(settings.characterAppearEffect, characterNameTarget, 0.3f, AnimationCurve.EaseInOut(0, 0, 1, 1));
+                DSP_EffectsHandler.AppearNameBox(characterNameBoxTarget);
             }
         }
         else
         {
-            characterNameText.gameObject.SetActive(false);
+            DSP_EffectsHandler.DisappearNameBox(characterNameBoxTarget);
         }
         
         if (characterSprite != null)
         {
             characterImage.sprite = characterSprite;
-            characterImage.gameObject.SetActive(true);
-            if (characterChanged)
-            {
-                //DSP_Effects.PlayEffect(settings.characterAppearEffect, characterImageTarget, 0.3f, AnimationCurve.EaseInOut(0, 0, 1, 1));
-            }
+            DSP_EffectsHandler.AppearCharacterImage(characterImageTarget);
         }
         else
         {
-            characterImage.gameObject.SetActive(false);
+            DSP_EffectsHandler.DisappearCharacterImage(characterImageTarget);
         }
         
-        //DSP_Effects.PlayEffect(settings.textRevealEffect, dialogueTextTarget, 0.5f, AnimationCurve.Linear(0, 0, 1, 1));
+        
         
         DSP_NodeData nextNode = PeekNextNode();
         if (nextNode.nodeType != DSP_NodeType.Choice)
-        {
-            EnableContinueButton();
-        }
-        
-        /*
-        DSP_NodeData nextNode = PeekNextNode();
-        if (nextNode == null || nextNode.nodeType != DSP_NodeType.Choice)
-        {
-            EnableContinueButton();
-        }
-        */
+            DSP_EffectsHandler.AppearContinueButton(continueButton.gameObject);
     }
     
     private void OnChoiceNode(string[] choices)
     {
-        DisableContinueButton();
-    }
-    
-    private IEnumerator PlayDialogueBoxAppearEffect()
-    {
-        //DSP_Effects.PlayEffect(settings.dialogueBoxAppearEffect, dialogueBoxTarget, 0.4f, AnimationCurve.EaseInOut(0, 0, 1, 1));
-        yield return new WaitForSeconds(0.4f);
-    }
-
-    private IEnumerator PlayDialogueBoxDisappearEffect()
-    {
-        //DSP_Effects.PlayEffect(settings.dialogueBoxDisappearEffect, dialogueBoxTarget, 0.3f, AnimationCurve.EaseInOut(0, 0, 1, 1));
-        yield return new WaitForSeconds(0.3f);
-        gameObject.SetActive(false);
+        DSP_EffectsHandler.DisappearContinueButton(continueButton.gameObject);
     }
     
     private DSP_NodeData PeekNextNode()
@@ -180,26 +145,6 @@ public class DSP_DialogueBoxVisualizer : MonoBehaviour
 
 
         return next;
-    }
-
-    void EnableContinueButton()
-    {
-        continueButton.GetComponent<CanvasGroup>().interactable = true;
-        continueButton.GetComponent<CanvasGroup>().blocksRaycasts = true;
-        continueButton.GetComponent<CanvasGroup>().alpha = 1;
-        
-        // Effect
-        //DSP_Effects.PlayEffect(settings.continueButtonAppearEffect, continueButtonTarget, 0.3f, AnimationCurve.EaseInOut(0, 0, 1, 1));
-    }
-    
-    void DisableContinueButton()
-    {
-        continueButton.GetComponent<CanvasGroup>().interactable = false;
-        continueButton.GetComponent<CanvasGroup>().blocksRaycasts = false;
-        continueButton.GetComponent<CanvasGroup>().alpha = 0;
-        
-        // Effect
-        //DSP_Effects.PlayEffect(settings.continueButtonDisappearEffect, continueButtonTarget, 0.2f, AnimationCurve.EaseInOut(0, 0, 1, 1));
     }
     
     public void OnContinueClicked()
