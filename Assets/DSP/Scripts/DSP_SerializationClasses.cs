@@ -23,7 +23,7 @@ public enum DSP_NodeType
 
     public SerializableValue[] eventParameters; // only for Event and Condition nodes
     public SerializableEvent[] finalEvents; // only for Event nodes
-    public SerializableCondition finalCondition; // only for Condition nodes
+    public SerializableCondition[] finalConditions; // for Condition and Choice nodes
 }
 [System.Serializable] public class DSP_EdgeData
 {

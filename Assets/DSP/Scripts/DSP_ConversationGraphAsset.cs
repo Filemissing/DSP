@@ -118,7 +118,7 @@ public class DSP_ConversationIterator
     }
 
     /// <summary>
-    /// For linear nodes (Dialogue -> single edge). Throws if called on a Choice node.
+    /// For linear nodes, Throws if called on a Choice node.
     /// </summary>
     public void Advance()
     {
@@ -167,7 +167,6 @@ public class DSP_ConversationIterator
             switch (node.nodeType)
             {
                 case DSP_NodeType.Start:
-                    // Transparent � just follow the single outgoing edge
                     node = FollowSingleEdge(node);
                     break;
 
@@ -190,7 +189,7 @@ public class DSP_ConversationIterator
                     break;
 
                 case DSP_NodeType.Condition:
-                    bool result = node.finalCondition.Invoke();
+                    bool result = node.finalConditions[0].Invoke();
                     var conditionEdges = _graph.GetOutgoingEdges(node);
                     var branch = conditionEdges.FirstOrDefault(e => e.outPortID == (result ? 0 : 1));
                     node = branch != null ? _graph.GetNodes().FirstOrDefault(n => n.id == branch.toNode) : null;
