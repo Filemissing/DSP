@@ -213,7 +213,8 @@ public class DSP_NodeGraphView : GraphView
                         new(choiceNode.assignedObjects.ToArray()),
                         new(methodkeys)
                     },
-                    eventParameters = parameters
+                    eventParameters = parameters,
+                    finalConditions = choiceNode.finalConditions.ToArray()
                 });
             }
             else if (node is DSP_StaticEventNode staticEventNode)
@@ -747,12 +748,6 @@ public class DSP_ChoiceNode : Node
     {
         int index = choices.Count;
 
-        // grow lists
-        conditionalStates.Add(false);
-        methodMaps.Add(new());
-        finalConditions.Add(null);
-        assignedObjects.Add(null);
-
         VisualElement chunk = new VisualElement();
         chunk.style.flexDirection = FlexDirection.Column;
         chunk.style.alignContent = Align.Center;
@@ -973,6 +968,7 @@ public class DSP_ChoiceNode : Node
             finalConditions[index] = isStatic
                 ? new SerializableCondition(method.DeclaringType, method.Name)
                 : new SerializableCondition(instanceTarget, method.Name);
+            finalConditions[index].hasValue = true;
             return;
         }
 
@@ -990,6 +986,8 @@ public class DSP_ChoiceNode : Node
             finalConditions[index] = isStatic
                 ? new SerializableCondition(method.DeclaringType, method.Name, sv)
                 : new SerializableCondition(instanceTarget, method.Name, sv);
+
+            finalConditions[index].hasValue = true;
         }
 
         if (typeof(Object).IsAssignableFrom(paramType))
@@ -1545,6 +1543,7 @@ public class DSP_ConditionNode : Node
             finalCondition = isStatic
                 ? new SerializableCondition(method.DeclaringType, method.Name)
                 : new SerializableCondition(instanceTarget, method.Name);
+            finalCondition.hasValue = true;
             return;
         }
 
@@ -1562,6 +1561,8 @@ public class DSP_ConditionNode : Node
             finalCondition = isStatic
                 ? new SerializableCondition(method.DeclaringType, method.Name, sv)
                 : new SerializableCondition(instanceTarget, method.Name, sv);
+
+            finalCondition.hasValue = true;
         }
 
         if (typeof(Object).IsAssignableFrom(paramType))

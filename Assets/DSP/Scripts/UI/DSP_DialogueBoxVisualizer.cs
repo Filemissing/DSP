@@ -126,7 +126,7 @@ public class DSP_DialogueBoxVisualizer : MonoBehaviour
             DSP_EffectsHandler.AppearContinueButton(continueButton.gameObject);
     }
     
-    private void OnChoiceNode(string[] choices)
+    private void OnChoiceNode((string, bool)[] choices)
     {
         DSP_EffectsHandler.DisappearContinueButton(continueButton.gameObject);
     }

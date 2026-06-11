@@ -36,7 +36,7 @@ public class DSP_DialogueOptionsVisualizer : MonoBehaviour
         ClearOptions();
     }
     
-    private void OnChoiceNode(string[] choices)
+    private void OnChoiceNode((string, bool)[] choices)
     {
         if (choices == null || choices.Length == 0) return;
         
@@ -53,7 +53,7 @@ public class DSP_DialogueOptionsVisualizer : MonoBehaviour
     
     
     // Helpers
-    private void CreateOptions(string[] choices)
+    private void CreateOptions((string, bool)[] choices)
     {
         ClearOptions();
         
@@ -62,8 +62,10 @@ public class DSP_DialogueOptionsVisualizer : MonoBehaviour
             int index = i;
             
             GameObject optionButton = Instantiate(optionButtonPrefab, optionsContainer.transform);
-            optionButton.GetComponent<Button>().onClick.AddListener(( )=> OnOptionSelected(index));
-            optionButton.transform.GetChild(0).GetComponent<TMP_Text>().text = choices[index];
+            Button button = optionButton.GetComponent<Button>();
+            button.onClick.AddListener(() => OnOptionSelected(index));
+            button.interactable = choices[index].Item2;
+            optionButton.transform.GetChild(0).GetComponent<TMP_Text>().text = choices[index].Item1;
             options.Add(optionButton);
         }
     }

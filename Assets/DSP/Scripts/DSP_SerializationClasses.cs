@@ -217,6 +217,8 @@ public enum DSP_NodeType
 }
 [System.Serializable] public class SerializableCondition
 {
+    public bool hasValue = false;
+
     public Object target;
     public string methodName;
     public string staticTypeName;
@@ -285,4 +287,6 @@ public enum DSP_NodeType
             return (bool)method.Invoke(target, args);
         }
     }
+
+    
 }

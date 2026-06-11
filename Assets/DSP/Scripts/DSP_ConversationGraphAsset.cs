@@ -103,13 +103,17 @@ public class DSP_ConversationIterator
     private DSP_NodeData _currentNode;
 
     public DSP_NodeData CurrentNode => _currentNode;
+
+    public string dialogue;
+    public List<(string, bool)> choices;
+
     public DSP_IteratorState State { get; private set; } = DSP_IteratorState.Running;
 
     public DSP_ConversationIterator(DSP_ConversationGraphAsset graph)
     {
         _graph = graph;
 
-        // Find and immediately step past the Start node
+        // Find the Start node
         _currentNode = graph.GetNodes().FirstOrDefault(n => n.nodeType == DSP_NodeType.Start);
         if (_currentNode == null)
             throw new InvalidOperationException("Graph has no Start node.");
@@ -196,9 +200,12 @@ public class DSP_ConversationIterator
                     break;
 
                 case DSP_NodeType.Dialogue:
-                case DSP_NodeType.Choice:
                     State = DSP_IteratorState.WaitingForUI;
                     return; // Pause here
+
+                case DSP_NodeType.Choice:
+                    State = DSP_IteratorState.WaitingForUI;
+                    return;
             }
         }
 

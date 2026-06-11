@@ -28,7 +28,7 @@ public class DSP_ConversationManager : MonoBehaviour
     // Delegate definitions
     public delegate void ConversationEventHandler();
     public delegate void DialogueEventHandler(string dialogue, string characterName, Sprite characterSprite);
-    public delegate void ChoiceEventHandler(string[] choices);
+    public delegate void ChoiceEventHandler((string, bool)[] choices);
     
     // Events
     public event ConversationEventHandler OnConversationStarted;
@@ -155,11 +155,16 @@ public class DSP_ConversationManager : MonoBehaviour
     
     private void HandleChoiceNode(DSP_NodeData node)
     {
-        string[] choices = null;
+        string[] choicesArray = node.values[0].GetValue() as string[];
+
+        (string, bool)[] choices = new (string, bool)[choicesArray.Length];
         
-        if (node.values.Length > 0 && node.values[0].GetValue() is string[] choicesArray)
+        if (node.values.Length > 0 && choicesArray != null)
         {
-            choices = choicesArray;
+            for (int i = 0; i < choicesArray.Length; i++)
+            {
+                choices[i] = (choicesArray[i], node.finalConditions[i].hasValue ? node.finalConditions[i].Invoke() : true);
+            }
         }
         
         OnChoiceNode?.Invoke(choices);
