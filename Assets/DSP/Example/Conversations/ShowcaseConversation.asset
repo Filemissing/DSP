@@ -30,9 +30,86 @@ MonoBehaviour:
       - Cloudy
       boolArray: 
       objectArray: []
-    eventParameters: []
+    - type: 9
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 0000
+      objectArray: []
+    - type: 10
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray:
+      - {fileID: 0}
+      - {fileID: 0}
+    - type: 8
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray:
+      - 
+      - 
+      boolArray: 
+      objectArray: []
+    eventParameters:
+    - type: 0
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    - type: 0
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
     finalEvents: []
-    finalCondition:
+    finalConditions:
+    - hasValue: 0
+      target: {fileID: 0}
+      methodName: 
+      staticTypeName: 
+      isStatic: 0
+      parameter:
+        type: 0
+        intValue: 0
+        floatValue: 0
+        stringValue: 
+        boolValue: 0
+        objectValue: {fileID: 0}
+        intArray: 
+        floatArray: []
+        stringArray: []
+        boolArray: 
+        objectArray: []
+    - hasValue: 0
       target: {fileID: 0}
       methodName: 
       staticTypeName: 
@@ -88,23 +165,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 2
     nodeType: 2
     position: {x: 1860.7999, y: -2051.2}
@@ -144,23 +205,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 3
     nodeType: 2
     position: {x: 1450.3999, y: -2051.2}
@@ -200,23 +245,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 4
     nodeType: 5
     position: {x: 3168, y: -1856.8}
@@ -234,23 +263,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 5
     nodeType: 2
     position: {x: 3488, y: -1856.8}
@@ -290,23 +303,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 6
     nodeType: 2
     position: {x: 3780, y: -1856.8}
@@ -346,23 +343,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 7
     nodeType: 2
     position: {x: 4513.6, y: -1856.8}
@@ -402,23 +383,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 8
     nodeType: 3
     position: {x: 4845.6, y: -1856.8}
@@ -436,9 +401,86 @@ MonoBehaviour:
       - Sunset
       boolArray: 
       objectArray: []
-    eventParameters: []
+    - type: 9
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 0000
+      objectArray: []
+    - type: 10
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray:
+      - {fileID: 0}
+      - {fileID: 0}
+    - type: 8
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray:
+      - 
+      - 
+      boolArray: 
+      objectArray: []
+    eventParameters:
+    - type: 0
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    - type: 0
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
     finalEvents: []
-    finalCondition:
+    finalConditions:
+    - hasValue: 0
+      target: {fileID: 0}
+      methodName: 
+      staticTypeName: 
+      isStatic: 0
+      parameter:
+        type: 0
+        intValue: 0
+        floatValue: 0
+        stringValue: 
+        boolValue: 0
+        objectValue: {fileID: 0}
+        intArray: 
+        floatArray: []
+        stringArray: []
+        boolArray: 
+        objectArray: []
+    - hasValue: 0
       target: {fileID: 0}
       methodName: 
       staticTypeName: 
@@ -494,23 +536,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 10
     nodeType: 2
     position: {x: 5448.8003, y: -2412.8}
@@ -550,23 +576,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 11
     nodeType: 5
     position: {x: 5768.8003, y: -2412.8}
@@ -584,23 +594,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 12
     nodeType: 3
     position: {x: 4845.6, y: -2303.2}
@@ -618,9 +612,86 @@ MonoBehaviour:
       - Nah, this is fine.
       boolArray: 
       objectArray: []
-    eventParameters: []
+    - type: 9
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 0000
+      objectArray: []
+    - type: 10
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray:
+      - {fileID: 0}
+      - {fileID: 0}
+    - type: 8
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray:
+      - 
+      - 
+      boolArray: 
+      objectArray: []
+    eventParameters:
+    - type: 0
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
+    - type: 0
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+      intArray: 
+      floatArray: []
+      stringArray: []
+      boolArray: 
+      objectArray: []
     finalEvents: []
-    finalCondition:
+    finalConditions:
+    - hasValue: 0
+      target: {fileID: 0}
+      methodName: 
+      staticTypeName: 
+      isStatic: 0
+      parameter:
+        type: 0
+        intValue: 0
+        floatValue: 0
+        stringValue: 
+        boolValue: 0
+        objectValue: {fileID: 0}
+        intArray: 
+        floatArray: []
+        stringArray: []
+        boolArray: 
+        objectArray: []
+    - hasValue: 0
       target: {fileID: 0}
       methodName: 
       staticTypeName: 
@@ -654,23 +725,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 14
     nodeType: 2
     position: {x: 5448.8003, y: -1624}
@@ -710,23 +765,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 15
     nodeType: 2
     position: {x: 5452.8003, y: -1856.8}
@@ -766,23 +805,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 16
     nodeType: 2
     position: {x: 6118.4004, y: -2412.8}
@@ -822,23 +845,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 17
     nodeType: 2
     position: {x: 6454.4004, y: -2412.8}
@@ -878,23 +885,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 18
     nodeType: 2
     position: {x: 6108.8003, y: -1624}
@@ -934,23 +925,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 19
     nodeType: 2
     position: {x: 6458.4004, y: -1624}
@@ -990,23 +965,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 20
     nodeType: 1
     position: {x: 6988, y: -2024}
@@ -1024,23 +983,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 21
     nodeType: 2
     position: {x: 5768.8003, y: -1856.8}
@@ -1048,8 +991,8 @@ MonoBehaviour:
     - type: 3
       intValue: 0
       floatValue: 0
-      stringValue: I guess you just like looking at clouds while it's sunny inside.
-        That's fine.
+      stringValue: I guess you just like looking at clouds while it's sunny. That's
+        fine.
       boolValue: 0
       objectValue: {fileID: 0}
       intArray: 
@@ -1081,46 +1024,14 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 22
     nodeType: 0
     position: {x: 933.60004, y: -2051.2}
     values: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 23
     nodeType: 5
     position: {x: 1076, y: -2051.2}
@@ -1138,23 +1049,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 24
     nodeType: 2
     position: {x: 3168, y: -2303.2}
@@ -1194,23 +1089,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   - id: 25
     nodeType: 2
     position: {x: 4513.6, y: -2303.2}
@@ -1250,23 +1129,7 @@ MonoBehaviour:
       objectArray: []
     eventParameters: []
     finalEvents: []
-    finalCondition:
-      target: {fileID: 0}
-      methodName: 
-      staticTypeName: 
-      isStatic: 0
-      parameter:
-        type: 0
-        intValue: 0
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        objectValue: {fileID: 0}
-        intArray: 
-        floatArray: []
-        stringArray: []
-        boolArray: 
-        objectArray: []
+    finalConditions: []
   edges:
   - fromNode: 0
     outPortID: 1
