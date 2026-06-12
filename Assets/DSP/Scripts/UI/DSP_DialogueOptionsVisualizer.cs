@@ -12,7 +12,7 @@ public class DSP_DialogueOptionsVisualizer : MonoBehaviour
     public GameObject optionButtonPrefab;
     
     private DSP_ConversationManager conversationManager;
-    private DSP_SettingsObject settings;
+    [SerializeField] private DSP_DialogueBoxVisualizer dialogueBoxVisualizer;
 
     private List<GameObject> options = new List<GameObject>();
     
@@ -22,7 +22,6 @@ public class DSP_DialogueOptionsVisualizer : MonoBehaviour
     void Awake()
     {
         conversationManager = DSP_ConversationManager.GetInstance();
-        settings = conversationManager.settings;
         ClearOptions();
     }
     
@@ -41,12 +40,13 @@ public class DSP_DialogueOptionsVisualizer : MonoBehaviour
         if (choices == null || choices.Length == 0) return;
         
         CreateOptions(choices);
-        DSP_EffectsHandler.AppearOptions(options);
+
+        dialogueBoxVisualizer.ForcePlayEffect(options, DSP_DialogueBoxVisualizer.EffectType.AppearOptions);
     }
     
     private void OnOptionSelected(int choiceIndex)
     {
-        DSP_EffectsHandler.DisappearOptions(options);
+        dialogueBoxVisualizer.ForcePlayEffect(options, DSP_DialogueBoxVisualizer.EffectType.DisappearOptions);
         conversationManager.AdvanceChoice(choiceIndex);
     }
     

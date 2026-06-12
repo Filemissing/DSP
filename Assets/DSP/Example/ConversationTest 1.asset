@@ -15,7 +15,7 @@ MonoBehaviour:
   nodes:
   - id: 0
     nodeType: 0
-    position: {x: 366.66666, y: 300}
+    position: {x: 367.2, y: 300}
     values: []
     eventParameters: []
     finalEvents: []
@@ -38,7 +38,7 @@ MonoBehaviour:
         objectArray: []
   - id: 1
     nodeType: 2
-    position: {x: 926.6667, y: 300}
+    position: {x: 927.2, y: 300}
     values:
     - type: 3
       intValue: 0
@@ -94,7 +94,7 @@ MonoBehaviour:
         objectArray: []
   - id: 2
     nodeType: 1
-    position: {x: 2054.6667, y: 452}
+    position: {x: 2055.2, y: 452}
     values:
     - type: 1
       intValue: 3
@@ -128,7 +128,7 @@ MonoBehaviour:
         objectArray: []
   - id: 3
     nodeType: 6
-    position: {x: 907.3333, y: 570}
+    position: {x: 907.2, y: 570.4}
     values:
     - type: 5
       intValue: 0
@@ -157,7 +157,7 @@ MonoBehaviour:
       intValue: 0
       floatValue: 0
       stringValue: 
-      boolValue: 0
+      boolValue: 1
       objectValue: {fileID: 0}
       intArray: 
       floatArray: []
@@ -176,7 +176,7 @@ MonoBehaviour:
         intValue: 0
         floatValue: 0
         stringValue: 
-        boolValue: 0
+        boolValue: 1
         objectValue: {fileID: 0}
         intArray: 
         floatArray: []
@@ -185,7 +185,7 @@ MonoBehaviour:
         objectArray: []
   - id: 4
     nodeType: 4
-    position: {x: 1552, y: 474.66666}
+    position: {x: 1552, y: 475.2}
     values:
     - type: 1
       intValue: 3
@@ -329,7 +329,7 @@ MonoBehaviour:
         objectArray: []
   - id: 5
     nodeType: 2
-    position: {x: 1287.3334, y: 686}
+    position: {x: 1287.2, y: 686.4}
     values:
     - type: 3
       intValue: 0
@@ -385,7 +385,7 @@ MonoBehaviour:
         objectArray: []
   - id: 6
     nodeType: 2
-    position: {x: 1287.3334, y: 474.66666}
+    position: {x: 1287.2, y: 475.2}
     values:
     - type: 3
       intValue: 0
@@ -441,7 +441,7 @@ MonoBehaviour:
         objectArray: []
   - id: 7
     nodeType: 3
-    position: {x: 759.3333, y: 396.66666}
+    position: {x: 759.2, y: 396.80002}
     values:
     - type: 8
       intValue: 0
@@ -478,7 +478,7 @@ MonoBehaviour:
         objectArray: []
   - id: 8
     nodeType: 2
-    position: {x: 1352, y: 153.33334}
+    position: {x: 1352, y: 153.59999}
     values:
     - type: 3
       intValue: 0
@@ -534,7 +534,7 @@ MonoBehaviour:
         objectArray: []
   - id: 9
     nodeType: 2
-    position: {x: 473.33334, y: 300}
+    position: {x: 473.6, y: 300}
     values:
     - type: 3
       intValue: 0

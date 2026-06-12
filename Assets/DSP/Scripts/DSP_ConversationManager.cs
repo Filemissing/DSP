@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using System.Collections;
 using System.Linq;
@@ -31,11 +32,11 @@ public class DSP_ConversationManager : MonoBehaviour
     public delegate void ChoiceEventHandler(string[] choices);
     
     // Events
-    public event ConversationEventHandler OnConversationStarted;
-    public event ConversationEventHandler OnConversationEnded;
+    public event Action OnConversationStarted;
+    public event Action OnConversationEnded;
     public event DialogueEventHandler OnDialogueNode;
     public event ChoiceEventHandler OnChoiceNode;
-    public event ConversationEventHandler OnEventNode;
+    public event Action OnEventNode;
     
     public bool IsConversationActive { get; private set; }
     public bool IsAtChoiceNode { get; private set; }

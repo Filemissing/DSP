@@ -1,11 +1,28 @@
+using System;
 using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 
 public class DSP_DialogueBoxVisualizer : MonoBehaviour
 {
+    public enum EffectType
+    {
+        AppearDialogueBox,
+        DisappearDialogueBox,
+        AppearContinueButton,
+        DisappearContinueButton,
+        AppearOptions,
+        DisappearOptions,
+        AppearCharacterImage,
+        DisappearCharacterImage,
+        AppearNameBox,
+        DisappearNameBox,
+        RevealText,
+    }
+    
     [Header("UI References")]
     public TextMeshProUGUI characterNameText;
     public Image characterImage;
@@ -23,6 +40,11 @@ public class DSP_DialogueBoxVisualizer : MonoBehaviour
     private string currentCharacterName;
     private Sprite currentCharacterSprite;
     
+    // Events
+    public event Action<IEnumerable<GameObject>, EffectType> PlayEffect;
+    
+    
+    
     void Start()
     {
         conversationManager = DSP_ConversationManager.GetInstance();
@@ -34,9 +56,9 @@ public class DSP_DialogueBoxVisualizer : MonoBehaviour
             conversationManager.OnDialogueNode += OnDialogueNode;
             conversationManager.OnChoiceNode += OnChoiceNode;
         }
-        
-        DSP_EffectsHandler.DisappearContinueButton(continueButton.gameObject);
-        DSP_EffectsHandler.DisappearDialogueBox(gameObject);
+
+        PlayEffect?.Invoke(new[] {continueButton.gameObject}, EffectType.DisappearContinueButton);
+        PlayEffect?.Invoke(new[] {dialogueBoxTarget}, EffectType.DisappearDialogueBox);
         
         ApplySettings();
     }
@@ -79,20 +101,21 @@ public class DSP_DialogueBoxVisualizer : MonoBehaviour
     
     private void OnConversationStarted()
     {
-        DSP_EffectsHandler.AppearDialogueBox(gameObject);
+        PlayEffect?.Invoke(new[] {dialogueBoxTarget}, EffectType.AppearDialogueBox);
     }
     
     private void OnConversationEnded()
     {
-        if (gameObject.activeSelf)
-            DSP_EffectsHandler.DisappearDialogueBox(gameObject);
+        PlayEffect?.Invoke(new[] {dialogueBoxTarget}, EffectType.DisappearDialogueBox);
     }
     
     private void OnDialogueNode(string dialogue, string characterName, Sprite characterSprite)
     {
         bool characterChanged = currentCharacterName != characterName || currentCharacterSprite != characterSprite;
         
-        DSP_EffectsHandler.RevealText(dialogueTextTarget, dialogue);
+        dialogueTextTarget.GetComponent<TMP_Text>().text = dialogue;
+        PlayEffect?.Invoke(new[] {dialogueTextTarget}, EffectType.RevealText);
+        
         currentCharacterName = characterName;
         currentCharacterSprite = characterSprite;
         
@@ -100,35 +123,31 @@ public class DSP_DialogueBoxVisualizer : MonoBehaviour
         {
             characterNameText.text = characterName;
             if (characterChanged)
-            {
-                DSP_EffectsHandler.AppearNameBox(characterNameBoxTarget);
-            }
+                PlayEffect?.Invoke(new[] {characterNameBoxTarget}, EffectType.AppearNameBox);
         }
         else
-        {
-            DSP_EffectsHandler.DisappearNameBox(characterNameBoxTarget);
-        }
+            PlayEffect?.Invoke(new[] {characterNameBoxTarget}, EffectType.DisappearNameBox);
+        
+        
         
         if (characterSprite != null)
         {
             characterImage.sprite = characterSprite;
-            DSP_EffectsHandler.AppearCharacterImage(characterImageTarget);
+            PlayEffect?.Invoke(new[] {characterImageTarget}, EffectType.AppearCharacterImage);
         }
         else
-        {
-            DSP_EffectsHandler.DisappearCharacterImage(characterImageTarget);
-        }
+            PlayEffect?.Invoke(new[] {characterImageTarget}, EffectType.DisappearCharacterImage);
         
         
         
         DSP_NodeData nextNode = PeekNextNode();
         if (nextNode.nodeType != DSP_NodeType.Choice)
-            DSP_EffectsHandler.AppearContinueButton(continueButton.gameObject);
+            PlayEffect?.Invoke(new[] {continueButton.gameObject}, EffectType.AppearContinueButton);
     }
     
     private void OnChoiceNode(string[] choices)
     {
-        DSP_EffectsHandler.DisappearContinueButton(continueButton.gameObject);
+        PlayEffect?.Invoke(new[] {continueButton.gameObject}, EffectType.DisappearContinueButton);
     }
     
     private DSP_NodeData PeekNextNode()
@@ -153,5 +172,10 @@ public class DSP_DialogueBoxVisualizer : MonoBehaviour
             return;
         
         conversationManager.Advance();
+    }
+
+    public void ForcePlayEffect(IEnumerable<GameObject> objects, EffectType effectType)
+    {
+        PlayEffect?.Invoke(objects, effectType);
     }
 }
