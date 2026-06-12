@@ -145,7 +145,7 @@ public class DSP_DialogueBoxVisualizer : MonoBehaviour
             PlayEffect?.Invoke(new[] {continueButton.gameObject}, EffectType.AppearContinueButton);
     }
     
-    private void OnChoiceNode(string[] choices)
+    private void OnChoiceNode((string, bool)[] choices)
     {
         PlayEffect?.Invoke(new[] {continueButton.gameObject}, EffectType.DisappearContinueButton);
     }

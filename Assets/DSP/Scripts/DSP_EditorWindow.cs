@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Unity.Android.Gradle;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
@@ -107,13 +108,18 @@ public class DSP_NodeGraphView : GraphView
                     AddElement(eventNode);
                     continue;
                 }
+                if (nodeData.nodeType == DSP_NodeType.Choice)
+                {
+                    DSP_ChoiceNode choiceNode = new DSP_ChoiceNode(nodeData.position, nodeData.values, nodeData.eventParameters);
+                    AddElement(choiceNode);
+                    continue;
+                }
 
                 Type nodeType = nodeData.nodeType switch
                 {
                     DSP_NodeType.Start => typeof(DSP_StartNode),
                     DSP_NodeType.End => typeof(DSP_EndNode),
                     DSP_NodeType.Dialogue => typeof(DSP_DialogueNode),
-                    DSP_NodeType.Choice => typeof(DSP_ChoiceNode),
                     DSP_NodeType.SceneEvent => typeof(DSP_SceneEventNode),
                     _ => throw new Exception("Unknown node type")
                 };
@@ -180,12 +186,35 @@ public class DSP_NodeGraphView : GraphView
             }
             else if (node is DSP_ChoiceNode choiceNode)
             {
+                string[] methodkeys = new string[choiceNode.choices.Count];
+                SerializableValue[] parameters = new SerializableValue[methodkeys.Length];
+                for (int i = 0; i < choiceNode.finalConditions.Count; i++)
+                {
+                    SerializableCondition condition = choiceNode.finalConditions[i];
+                    if (condition != null)
+                    {
+                        methodkeys[i] = condition.isStatic
+                            ? $"Static/{BuildSignature(condition)}"
+                            : $"{condition?.GetType().Name}/{BuildSignature(condition)}";
+
+                        parameters[i] = condition.parameter;
+                    }
+                }
+
                 graphAsset.AddNode(new DSP_NodeData
                 {
                     id = nodes.ToList().FindIndex(n => n == node),
                     nodeType = DSP_NodeType.Choice,
                     position = node.GetPosition().position,
-                    values = new SerializableValue[] { new(choiceNode.choices.Select(c => c.Item1.value).ToArray()) }
+                    values = new SerializableValue[]
+                    {
+                        new(choiceNode.choices.Select(c => c.Item1.value).ToArray()),
+                        new(choiceNode.conditionalStates.ToArray()),
+                        new(choiceNode.assignedObjects.ToArray()),
+                        new(methodkeys)
+                    },
+                    eventParameters = parameters,
+                    finalConditions = choiceNode.finalConditions.ToArray()
                 });
             }
             else if (node is DSP_StaticEventNode staticEventNode)
@@ -259,7 +288,7 @@ public class DSP_NodeGraphView : GraphView
                     eventParameters = conditionNode.finalCondition?.parameter != null
                         ? new SerializableValue[] { conditionNode.finalCondition.parameter }
                         : null,
-                    finalCondition = conditionNode.finalCondition
+                    finalConditions = new SerializableCondition[] { conditionNode.finalCondition }
                 });
             }
         }
@@ -645,7 +674,13 @@ public class DSP_ChoiceNode : Node
 {
     public List<(TextField, Port)> choices = new();
 
-    public DSP_ChoiceNode(Vector2 position, SerializableValue[] values = null)
+    public List<bool> conditionalStates = new();
+
+    private List<Dictionary<string, (MethodInfo method, Object target)>> methodMaps = new();
+    public List<SerializableCondition> finalConditions = new();
+    public List<Object> assignedObjects = new();
+
+    public DSP_ChoiceNode(Vector2 position, SerializableValue[] values = null, SerializableValue[] parameters = null)
     {
         title = "Choice";
         this.FixTransparency();
@@ -659,15 +694,29 @@ public class DSP_ChoiceNode : Node
 
         if (values != null && values.Length > 0)
         {
-            foreach (string choiceText in values[0].GetValue() as string[])
+            string[] choiceTexts = values[0].GetValue() as string[];
+            bool[] conditionalStates = values.Length > 1 ? values[1].GetValue() as bool[] : null;
+            Object[] savedObjects = values.Length > 2 ? values[2].GetValue() as Object[] : null;
+            string[] savedMethods = values.Length > 3 ? values[3].GetValue() as string[] : null;
+            SerializableValue[] savedParams = parameters.Length > 0 ? parameters : null;
+
+            for (int i = 0; i < choiceTexts.Length; i++)
             {
-                AddChoice(choiceContainer, choiceText);
+                int index = i; // capture i
+
+                string choiceText = choiceTexts[i];
+                bool conditionalState = conditionalStates != null ? conditionalStates[i] : false;
+                Object savedObject = savedObjects != null ? savedObjects[i] : null;
+                string savedMethod = savedMethods != null ? savedMethods[i] : null;
+                object savedParam = savedParams != null ? savedParams[i].GetValue() : null;
+
+                AddChoice(choiceContainer, choiceText, conditionalState, savedObject, savedMethod, savedParam);
             }
         }
         else
         {
             AddChoice(choiceContainer);
-            AddChoice(choiceContainer); 
+            AddChoice(choiceContainer);
         }
 
         mainContainer.Add(choiceContainer);
@@ -695,15 +744,30 @@ public class DSP_ChoiceNode : Node
         SetPosition(new Rect(position, Vector2.zero));
     }
 
-    void AddChoice(VisualElement container, string text = null)
+    void AddChoice(VisualElement container, string text = null, bool conditional = false, Object savedObject = null, string savedMethod = null, object savedParam = null)
     {
         int index = choices.Count;
+
+        VisualElement chunk = new VisualElement();
+        chunk.style.flexDirection = FlexDirection.Column;
+        chunk.style.alignContent = Align.Center;
+        chunk.style.width = new StyleLength(StyleKeyword.Auto);
+        chunk.style.flexGrow = 1;
 
         VisualElement row = new VisualElement();
         row.style.flexDirection = FlexDirection.Row;
         row.style.alignContent = Align.Center;
         row.style.width = new StyleLength(StyleKeyword.Auto);
         row.style.flexGrow = 1;
+
+        // conditional toggle
+        Toggle conditionalToggle = new Toggle();
+        conditionalToggle.RegisterValueChangedCallback(evt =>
+        {
+            ToggleConditional(index, chunk, evt.newValue);
+        });
+
+        row.Add(conditionalToggle);
 
         // text field
         TextField textField = new TextField()
@@ -721,10 +785,22 @@ public class DSP_ChoiceNode : Node
 
         row.Add(port);
 
+        chunk.Add(row);
+
         // add to list
         choices.Add((textField, port));
 
-        container.Add(row);
+        // grow lists
+        conditionalStates.Add(false);
+        methodMaps.Add(new());
+        finalConditions.Add(null);
+        assignedObjects.Add(null);
+
+        // restore saved data
+        conditionalToggle.value = conditional;
+        ToggleConditional(index, chunk, conditional, savedObject, savedMethod, savedParam);
+
+        container.Add(chunk);
     }
     void RemoveChoice(VisualElement container)
     {
@@ -741,6 +817,248 @@ public class DSP_ChoiceNode : Node
 
         // remove from list
         choices.RemoveAt(choices.Count - 1);
+
+        // shrink other lists
+        methodMaps.RemoveAt(methodMaps.Count - 1);
+        finalConditions.RemoveAt(finalConditions.Count - 1);
+        assignedObjects.RemoveAt(assignedObjects.Count - 1);
+    }
+
+    void ToggleConditional(int index, VisualElement choiceChunk, bool isConditional, Object savedObject = null, string savedMethod = null, object savedParam = null)
+    {
+        conditionalStates[index] = isConditional;
+
+        if (isConditional || savedObject != null) // add conditional field below choice text
+        {
+            if (choiceChunk.childCount > 1)
+            {
+                choiceChunk.Children().ElementAt(choiceChunk.childCount - 1).SetEnabled(true);
+                return;
+            }
+
+            VisualElement conditionChunk = new VisualElement();
+            conditionChunk.style.flexDirection = FlexDirection.Column;
+            conditionChunk.style.alignContent = Align.Center;
+            conditionChunk.style.width = new StyleLength(StyleKeyword.Auto);
+            conditionChunk.style.flexGrow = 1;
+
+            VisualElement row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.alignContent = Align.Center;
+            row.style.width = new StyleLength(StyleKeyword.Auto);
+            row.style.flexGrow = 1;
+
+            ObjectField objectField = new ObjectField();
+            objectField.allowSceneObjects = false;
+            objectField.style.width = 100;
+            objectField.objectType = typeof(Object);
+
+            DropdownField dropdownField = new DropdownField(new List<string> { "No Function" }, 0);
+            dropdownField.style.flexGrow = 1;
+
+            objectField.RegisterValueChangedCallback(evt =>
+                OnObjectAssigned(index, evt.newValue, dropdownField));
+            dropdownField.RegisterValueChangedCallback(evt =>
+                OnMenuValueChanged(index, evt.newValue, conditionChunk));
+
+            row.Add(objectField);
+            row.Add(dropdownField);
+
+            conditionChunk.Add(row);
+
+            // restore saved data
+            if (savedObject != null)
+            {
+                objectField.value = savedObject;
+                OnObjectAssigned(index, savedObject, dropdownField);
+
+                if (savedMethod != null)
+                {
+                    dropdownField.value = savedMethod;
+                    OnMenuValueChanged(index, savedMethod, conditionChunk, savedParam);
+                }
+            }
+
+            choiceChunk.Add(conditionChunk);
+        }
+
+        if (!isConditional) // remove or disable condition field
+        {
+            if (choiceChunk.childCount > 1)
+            {
+                if (assignedObjects[index] == null)
+                    choiceChunk.RemoveAt(choiceChunk.childCount - 1);
+                else
+                    choiceChunk.Children().ElementAt(choiceChunk.childCount - 1).SetEnabled(false);
+            }
+        }
+    }
+
+    void OnObjectAssigned(int index, Object obj, DropdownField menu)
+    {
+        assignedObjects[index] = obj;
+
+        menu.choices.Clear();
+        menu.choices.Add("No Function");
+        menu.value = "No Function";
+        methodMaps[index].Clear();
+
+        if (obj == null) return;
+
+        Type type = null;
+        Object instanceTarget = null;
+
+        if (obj is MonoScript monoScript)
+        {
+            type = monoScript.GetClass();
+        }
+        else if (obj is ScriptableObject so)
+        {
+            type = so.GetType();
+            instanceTarget = so;
+        }
+        else
+        {
+            type = obj.GetType();
+        }
+
+        if (type == null) return;
+
+        // Instance methods (ScriptableObject only)
+        if (instanceTarget != null)
+        {
+            foreach (var method in type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
+            {
+                if (!IsValidConditionMethod(method)) continue;
+
+                string key = $"{type.Name}/{BuildSignature(method)}";
+                menu.choices.Add(key);
+                methodMaps[index][key] = (method, instanceTarget);
+            }
+        }
+
+        // Static methods
+        foreach (var method in type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly))
+        {
+            if (!IsValidConditionMethod(method)) continue;
+
+            string key = $"Static/{BuildSignature(method)}";
+            menu.choices.Add(key);
+            methodMaps[index][key] = (method, null);
+        }
+    }
+    void OnMenuValueChanged(int index, string optionName, VisualElement chunk, object savedParam = null)
+    {
+        var oldRow = chunk.Children().FirstOrDefault(c => c.name == "ParamRow_0");
+        if (oldRow != null) chunk.Remove(oldRow);
+
+        if (optionName == "No Function" || !methodMaps[index].ContainsKey(optionName))
+        {
+            finalConditions[index] = null;
+            return;
+        }
+
+        var (method, instanceTarget) = methodMaps[index][optionName];
+        bool isStatic = instanceTarget == null;
+
+        ParameterInfo[] methodParams = method.GetParameters();
+
+        if (methodParams.Length == 0)
+        {
+            finalConditions[index] = isStatic
+                ? new SerializableCondition(method.DeclaringType, method.Name)
+                : new SerializableCondition(instanceTarget, method.Name);
+            finalConditions[index].hasValue = true;
+            return;
+        }
+
+        // Build parameter field
+        Type paramType = methodParams[0].ParameterType;
+
+        VisualElement paramRow = new VisualElement();
+        paramRow.name = "ParamRow_0";
+        paramRow.style.flexDirection = FlexDirection.Row;
+        paramRow.style.flexGrow = 1;
+
+        void Commit(object value)
+        {
+            var sv = new SerializableValue(value);
+            finalConditions[index] = isStatic
+                ? new SerializableCondition(method.DeclaringType, method.Name, sv)
+                : new SerializableCondition(instanceTarget, method.Name, sv);
+
+            finalConditions[index].hasValue = true;
+        }
+
+        if (typeof(Object).IsAssignableFrom(paramType))
+        {
+            var field = new ObjectField { allowSceneObjects = false, objectType = paramType };
+            field.style.flexGrow = 1;
+            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            if (savedParam != null) field.value = savedParam as Object;
+            Commit(field.value);
+            paramRow.Add(field);
+        }
+        else if (paramType == typeof(string))
+        {
+            var field = new TextField();
+            field.style.flexGrow = 1;
+            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            if (savedParam != null) field.value = (string)savedParam;
+            Commit(field.value);
+            paramRow.Add(field);
+        }
+        else if (paramType == typeof(int))
+        {
+            var field = new IntegerField();
+            field.style.flexGrow = 1;
+            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            if (savedParam != null) field.value = (int)savedParam;
+            Commit(field.value);
+            paramRow.Add(field);
+        }
+        else if (paramType == typeof(float))
+        {
+            var field = new FloatField();
+            field.style.flexGrow = 1;
+            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            if (savedParam != null) field.value = (float)savedParam;
+            Commit(field.value);
+            paramRow.Add(field);
+        }
+        else if (paramType == typeof(bool))
+        {
+            var field = new Toggle();
+            field.style.flexGrow = 1;
+            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            if (savedParam != null) field.value = (bool)savedParam;
+            Commit(field.value);
+            paramRow.Add(field);
+        }
+
+        chunk.Add(paramRow);
+    }
+
+    bool IsValidConditionMethod(MethodInfo method)
+    {
+        if (method.IsSpecialName) return false;
+        if (method.ReturnType != typeof(bool)) return false;
+        var methodParams = method.GetParameters();
+        if (methodParams.Length > 1) return false;
+        if (methodParams.Length == 1 && !IsSerializableType(methodParams[0].ParameterType)) return false;
+        return true;
+    }
+
+    bool IsSerializableType(Type type)
+    {
+        return type.IsPrimitive || type == typeof(string) ||
+               typeof(Object).IsAssignableFrom(type);
+    }
+
+    string BuildSignature(MethodInfo method)
+    {
+        string paramList = string.Join(", ", method.GetParameters().Select(p => p.ParameterType.Name));
+        return $"{method.Name}({paramList})";
     }
 }
 public class DSP_StaticEventNode : Node
@@ -757,7 +1075,7 @@ public class DSP_StaticEventNode : Node
 
     public DSP_StaticEventNode(Vector2 position, SerializableValue[] values = null, SerializableValue[] parameters = null)
     {
-        title = "Event";
+        title = "Static Event";
         this.FixTransparency();
 
         this.AddInputPort();
@@ -1055,7 +1373,7 @@ public class DSP_SceneEventNode : Node
 
     public DSP_SceneEventNode(Vector2 position, SerializableValue[] values = null)
     {
-        title = "Event";
+        title = "Scene Event";
         this.FixTransparency();
 
         this.AddInputPort();
@@ -1085,7 +1403,7 @@ public class DSP_SceneEventNode : Node
 }
 public class DSP_ConditionNode : Node
 {
-    private Dictionary<string, (MethodInfo method, Object target)> _methodMap = new();
+    private Dictionary<string, (MethodInfo method, Object target)> methodMap = new();
 
     public SerializableCondition finalCondition;
     public Object assignedObject;
@@ -1158,7 +1476,7 @@ public class DSP_ConditionNode : Node
         menu.choices.Clear();
         menu.choices.Add("No Function");
         menu.value = "No Function";
-        _methodMap.Clear();
+        methodMap.Clear();
 
         if (obj == null) return;
 
@@ -1190,7 +1508,7 @@ public class DSP_ConditionNode : Node
 
                 string key = $"{type.Name}/{BuildSignature(method)}";
                 menu.choices.Add(key);
-                _methodMap[key] = (method, instanceTarget);
+                methodMap[key] = (method, instanceTarget);
             }
         }
 
@@ -1201,7 +1519,7 @@ public class DSP_ConditionNode : Node
 
             string key = $"Static/{BuildSignature(method)}";
             menu.choices.Add(key);
-            _methodMap[key] = (method, null);
+            methodMap[key] = (method, null);
         }
     }
     void OnMenuValueChanged(string optionName, VisualElement lines, object savedParam = null)
@@ -1209,13 +1527,13 @@ public class DSP_ConditionNode : Node
         var oldRow = lines.Children().FirstOrDefault(c => c.name == "ParamRow_0");
         if (oldRow != null) lines.Remove(oldRow);
 
-        if (optionName == "No Function" || !_methodMap.ContainsKey(optionName))
+        if (optionName == "No Function" || !methodMap.ContainsKey(optionName))
         {
             finalCondition = null;
             return;
         }
 
-        var (method, instanceTarget) = _methodMap[optionName];
+        var (method, instanceTarget) = methodMap[optionName];
         bool isStatic = instanceTarget == null;
 
         ParameterInfo[] methodParams = method.GetParameters();
@@ -1225,6 +1543,7 @@ public class DSP_ConditionNode : Node
             finalCondition = isStatic
                 ? new SerializableCondition(method.DeclaringType, method.Name)
                 : new SerializableCondition(instanceTarget, method.Name);
+            finalCondition.hasValue = true;
             return;
         }
 
@@ -1242,6 +1561,8 @@ public class DSP_ConditionNode : Node
             finalCondition = isStatic
                 ? new SerializableCondition(method.DeclaringType, method.Name, sv)
                 : new SerializableCondition(instanceTarget, method.Name, sv);
+
+            finalCondition.hasValue = true;
         }
 
         if (typeof(Object).IsAssignableFrom(paramType))
