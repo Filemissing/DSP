@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
+using UnityEditor.Rendering;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static UnityEditor.Experimental.GraphView.Port;
 using Button = UnityEngine.UIElements.Button;
 using Edge = UnityEditor.Experimental.GraphView.Edge;
 using Image = UnityEngine.UIElements.Image;
@@ -27,8 +30,11 @@ public class DSP_EditorWindow : EditorWindow
         graphView.LoadFromAsset(dialogueGraphAsset);
     }
 
-    static DSP_NodeGraphView graphView;
+    public static DSP_NodeGraphView graphView;
     static Toolbar toolbar;
+
+    List<DSP_NodeData> copiedNodes = new();
+
     private void OnEnable()
     {
         // set up Node Graph element
@@ -47,21 +53,102 @@ public class DSP_EditorWindow : EditorWindow
         rootVisualElement.Add(toolbar);
         rootVisualElement.Add(graphView);
 
+        // setup callbacks
+        graphView.graphViewChanged = OnGraphViewChanged;
+
+        Undo.undoRedoPerformed += OnUndoRedo;
+
         rootVisualElement.RegisterCallback<KeyDownEvent>(evt =>
         {
-            if (evt.keyCode == KeyCode.S && evt.ctrlKey)
+            if ((evt.modifiers & EventModifiers.Control) != 0)
             {
-                graphView.SaveToAsset(dialogueGraphAsset);
-                evt.StopPropagation();
+                switch(evt.keyCode)
+                {
+                    case KeyCode.S:
+                        graphView.SaveToAsset(dialogueGraphAsset);
+
+                        evt.StopPropagation();
+                        break;
+
+                    case KeyCode.C:
+                        Copy();
+                        evt.StopPropagation();
+                        break;
+
+                    case KeyCode.V:
+                        Paste();
+                        evt.StopPropagation();
+                        break;
+
+                    case KeyCode.X:
+                        Copy();
+                        foreach (Node node in graphView.selection.OfType<Node>().ToList())
+                            node.parent.Remove(node);
+                        evt.StopPropagation();
+                        break;
+
+                    case KeyCode.D:
+                        Copy();
+                        Paste();
+                        evt.StopPropagation();
+                        break;
+                }
             }
         });
+
+        
+    }
+    GraphViewChange OnGraphViewChanged(GraphViewChange change)
+    {
+        if (change.elementsToRemove != null || change.edgesToCreate != null || change.movedElements != null)
+        {
+            RecordChange("Graph Edit");
+            EditorApplication.delayCall += () =>
+            {
+                graphView.SaveToAsset(dialogueGraphAsset); // delayed so removal can complete
+            };
+        }
+        return change;
+    }
+    public void RecordChange(string label)
+    {
+        Undo.RegisterCompleteObjectUndo(dialogueGraphAsset, label);
+    }
+    void OnUndoRedo()
+    {
+        graphView.LoadFromAsset(dialogueGraphAsset);
+    }
+
+    void Copy()
+    {
+        copiedNodes.Clear();
+        foreach (Node node in graphView.selection.OfType<Node>().ToList())
+        {
+            if ((node.capabilities & Capabilities.Deletable) != 0)
+                copiedNodes.Add(graphView.SaveNode(node));
+        }
+    }
+    void Paste()
+    {
+        graphView.SaveToAsset(dialogueGraphAsset);
+
+        foreach (DSP_NodeData data in copiedNodes)
+        {
+            data.position += new Vector2(40, 40);
+
+            Node newNode = graphView.CreateNodeInstance(data);
+            graphView.AddElement(newNode);
+        }
+
+        RecordChange("Paste");
+        graphView.SaveToAsset(dialogueGraphAsset);
     }
 }
 
 public class DSP_NodeGraphView : GraphView
 {
     private bool isUpdating;
-    
+
     public DSP_NodeGraphView()
     {
         style.flexGrow = 1;
@@ -93,39 +180,7 @@ public class DSP_NodeGraphView : GraphView
 
             // instantiate nodes
             foreach (DSP_NodeData nodeData in graphAsset.GetNodes())
-            {
-                // handle Event and Condition nodes separately since they require special handling
-                if (nodeData.nodeType == DSP_NodeType.StaticEvent)
-                {
-                    DSP_StaticEventNode eventNode = new DSP_StaticEventNode(nodeData.position, nodeData.values, nodeData.eventParameters);
-                    AddElement(eventNode);
-                    continue;
-                }
-                if (nodeData.nodeType == DSP_NodeType.Condition)
-                {
-                    DSP_ConditionNode eventNode = new DSP_ConditionNode(nodeData.position, nodeData.values, nodeData.eventParameters);
-                    AddElement(eventNode);
-                    continue;
-                }
-                if (nodeData.nodeType == DSP_NodeType.Choice)
-                {
-                    DSP_ChoiceNode choiceNode = new DSP_ChoiceNode(nodeData.position, nodeData.values, nodeData.eventParameters);
-                    AddElement(choiceNode);
-                    continue;
-                }
-
-                Type nodeType = nodeData.nodeType switch
-                {
-                    DSP_NodeType.Start => typeof(DSP_StartNode),
-                    DSP_NodeType.End => typeof(DSP_EndNode),
-                    DSP_NodeType.Dialogue => typeof(DSP_DialogueNode),
-                    DSP_NodeType.SceneEvent => typeof(DSP_SceneEventNode),
-                    _ => throw new Exception("Unknown node type")
-                };
-
-                Node node = (Node)Activator.CreateInstance(nodeType, nodeData.position, nodeData.values);
-                AddElement(node);
-            }
+                AddElement(CreateNodeInstance(nodeData));
 
             // restore edges
             foreach (DSP_EdgeData edgeData in graphAsset.GetAllEdges())
@@ -141,156 +196,44 @@ public class DSP_NodeGraphView : GraphView
             }
         });
     }
+    public Node CreateNodeInstance(DSP_NodeData data)
+    {
+        // handle Event and Condition nodes separately since they require special handling
+        if (data.nodeType == DSP_NodeType.StaticEvent)
+        {
+            DSP_StaticEventNode eventNode = new DSP_StaticEventNode(data.position, data.values, data.eventParameters);
+            return eventNode;
+        }
+        if (data.nodeType == DSP_NodeType.Condition)
+        {
+            DSP_ConditionNode conditionNode = new DSP_ConditionNode(data.position, data.values, data.eventParameters);
+            return conditionNode;
+        }
+        if (data.nodeType == DSP_NodeType.Choice)
+        {
+            DSP_ChoiceNode choiceNode = new DSP_ChoiceNode(data.position, data.values, data.eventParameters);
+            return choiceNode;
+        }
+
+        Type nodeType = data.nodeType switch
+        {
+            DSP_NodeType.Start => typeof(DSP_StartNode),
+            DSP_NodeType.End => typeof(DSP_EndNode),
+            DSP_NodeType.Dialogue => typeof(DSP_DialogueNode),
+            DSP_NodeType.SceneEvent => typeof(DSP_SceneEventNode),
+            _ => throw new Exception("Unknown node type")
+        };
+
+        Node node = (Node)Activator.CreateInstance(nodeType, data.position, data.values);
+        return node;
+    }
     public void SaveToAsset(DSP_ConversationGraphAsset graphAsset)
     {
         graphAsset.Clear();
 
         // save node data
         foreach (Node node in nodes)
-        {
-            if (node is DSP_StartNode)
-            {
-                graphAsset.AddNode(new DSP_NodeData
-                {
-                    id = nodes.ToList().FindIndex(n => n == node),
-                    nodeType = DSP_NodeType.Start,
-                    position = node.GetPosition().position,
-                    values = new SerializableValue[] { }
-                });
-            }
-            else if (node is DSP_EndNode endNode)
-            {
-                graphAsset.AddNode(new DSP_NodeData
-                {
-                    id = nodes.ToList().FindIndex(n => n == node),
-                    nodeType = DSP_NodeType.End,
-                    position = node.GetPosition().position,
-                    values = new SerializableValue[] { new(node.inputContainer.childCount) }
-                });
-            }
-            else if (node is DSP_DialogueNode dialogueNode)
-            {
-                graphAsset.AddNode(new DSP_NodeData
-                {
-                    id = nodes.ToList().FindIndex(n => n == node),
-                    nodeType = DSP_NodeType.Dialogue,
-                    position = node.GetPosition().position,
-                    values = new SerializableValue[]
-                    {
-                        new(dialogueNode.dialogueText),
-                        new(dialogueNode.characterAsset),
-                        new(dialogueNode.dialogueAudioClip)
-                    }
-                });
-            }
-            else if (node is DSP_ChoiceNode choiceNode)
-            {
-                string[] methodkeys = new string[choiceNode.choices.Count];
-                SerializableValue[] parameters = new SerializableValue[methodkeys.Length];
-                for (int i = 0; i < choiceNode.finalConditions.Count; i++)
-                {
-                    SerializableCondition condition = choiceNode.finalConditions[i];
-                    if (condition != null)
-                    {
-                        methodkeys[i] = condition.isStatic
-                            ? $"Static/{BuildSignature(condition)}"
-                            : $"{condition?.GetType().Name}/{BuildSignature(condition)}";
-
-                        parameters[i] = condition.parameter;
-                    }
-                }
-
-                graphAsset.AddNode(new DSP_NodeData
-                {
-                    id = nodes.ToList().FindIndex(n => n == node),
-                    nodeType = DSP_NodeType.Choice,
-                    position = node.GetPosition().position,
-                    values = new SerializableValue[]
-                    {
-                        new(choiceNode.choices.Select(c => c.Item1.value).ToArray()),
-                        new(choiceNode.conditionalStates.ToArray()),
-                        new(choiceNode.assignedObjects.ToArray()),
-                        new(methodkeys)
-                    },
-                    eventParameters = parameters,
-                    finalConditions = choiceNode.finalConditions.ToArray()
-                });
-            }
-            else if (node is DSP_StaticEventNode staticEventNode)
-            {
-                graphAsset.AddNode(new DSP_NodeData
-                {
-                    id = nodes.ToList().FindIndex(n => n == node),
-                    nodeType = DSP_NodeType.StaticEvent,
-                    position = node.GetPosition().position,
-                    values = new SerializableValue[]
-                    {
-                        new(staticEventNode.rowCount),
-                        // read directly from tracked references, not finalActions
-                        new(staticEventNode.assignedObjects.Select(o => o).ToArray()),
-                        new(staticEventNode.finalActions.Select(a =>
-                        {
-                            if (a == null) return null;
-                            if (a.isStatic)
-                            {
-                                Type t = Type.GetType(a.staticTypeName);
-                                MethodInfo m = t?.GetMethod(a.methodName, BindingFlags.Static | BindingFlags.Public);
-                                string sig = m != null ? BuildSignature(m) : $"{a.methodName}()";
-                                return $"Static/{sig}";
-                            }
-                            else
-                            {
-                                MethodInfo m = a.target?.GetType().GetMethod(a.methodName,
-                                    BindingFlags.Instance | BindingFlags.Public);
-                                string sig = m != null ? BuildSignature(m) : $"{a.methodName}()";
-                                return $"{a.target?.GetType().Name}/{sig}";
-                            }
-                        }).ToArray())
-                    },
-                    eventParameters = staticEventNode.parameters.Select(p => new SerializableValue(p)).ToArray(),
-                    finalEvents = staticEventNode.finalActions.ToArray()
-                });
-            }
-            else if (node is DSP_SceneEventNode sceneEventNode)
-            {
-                graphAsset.AddNode(new DSP_NodeData
-                {
-                    id = nodes.ToList().FindIndex(n => n == node),
-                    nodeType = DSP_NodeType.SceneEvent,
-                    position = node.GetPosition().position,
-                    values = new SerializableValue[]
-                    {
-                        new(sceneEventNode.eventAsset)
-                    }
-                });
-            }
-            else if (node is DSP_ConditionNode conditionNode)
-            {
-                string methodKey = null;
-                if (conditionNode.finalCondition != null)
-                {
-                    methodKey = conditionNode.finalCondition.isStatic
-                        ? $"Static/{BuildSignature(conditionNode.finalCondition)}"
-                        : $"{conditionNode.assignedObject?.GetType().Name}/{BuildSignature(conditionNode.finalCondition)}";
-                }
-
-                graphAsset.AddNode(new DSP_NodeData
-                {
-                    id = nodes.ToList().FindIndex(n => n == node),
-                    nodeType = DSP_NodeType.Condition,
-                    position = node.GetPosition().position,
-                    values = new SerializableValue[]
-                    {
-                        new(conditionNode.assignedObject),
-                        new(methodKey)
-                    },
-                    eventParameters = conditionNode.finalCondition?.parameter != null
-                        ? new SerializableValue[] { conditionNode.finalCondition.parameter }
-                        : null,
-                    finalConditions = new SerializableCondition[] { conditionNode.finalCondition }
-                });
-            }
-        }
+            graphAsset.AddNode(SaveNode(node));
 
         // save edge data
         foreach (Edge edge in edges)
@@ -315,6 +258,155 @@ public class DSP_NodeGraphView : GraphView
         EditorUtility.SetDirty(graphAsset);
         AssetDatabase.SaveAssets();
     }
+    public DSP_NodeData SaveNode(Node node)
+    {
+        DSP_NodeData data = null;
+
+        if (node is DSP_StartNode)
+        {
+            data = new DSP_NodeData
+            {
+                id = nodes.ToList().FindIndex(n => n == node),
+                nodeType = DSP_NodeType.Start,
+                position = node.GetPosition().position,
+                values = new SerializableValue[] { }
+            };
+        }
+        else if (node is DSP_EndNode endNode)
+        {
+            data = new DSP_NodeData
+            {
+                id = nodes.ToList().FindIndex(n => n == node),
+                nodeType = DSP_NodeType.End,
+                position = node.GetPosition().position,
+                values = new SerializableValue[] { new(node.inputContainer.childCount) }
+            };
+        }
+        else if (node is DSP_DialogueNode dialogueNode)
+        {
+            data = new DSP_NodeData
+            {
+                id = nodes.ToList().FindIndex(n => n == node),
+                nodeType = DSP_NodeType.Dialogue,
+                position = node.GetPosition().position,
+                values = new SerializableValue[]
+                {
+                        new(dialogueNode.dialogueText),
+                        new(dialogueNode.characterAsset),
+                        new(dialogueNode.dialogueAudioClip)
+                }
+            };
+        }
+        else if (node is DSP_ChoiceNode choiceNode)
+        {
+            string[] methodkeys = new string[choiceNode.choices.Count];
+            SerializableValue[] parameters = new SerializableValue[methodkeys.Length];
+            for (int i = 0; i < choiceNode.finalConditions.Count; i++)
+            {
+                SerializableCondition condition = choiceNode.finalConditions[i];
+                if (condition != null)
+                {
+                    methodkeys[i] = condition.isStatic
+                        ? $"Static/{BuildSignature(condition)}"
+                        : $"{condition?.GetType().Name}/{BuildSignature(condition)}";
+
+                    parameters[i] = condition.parameter;
+                }
+            }
+
+            data = new DSP_NodeData
+            {
+                id = nodes.ToList().FindIndex(n => n == node),
+                nodeType = DSP_NodeType.Choice,
+                position = node.GetPosition().position,
+                values = new SerializableValue[]
+                {
+                        new(choiceNode.choices.Select(c => c.Item1.value).ToArray()),
+                        new(choiceNode.conditionalStates.ToArray()),
+                        new(choiceNode.assignedObjects.ToArray()),
+                        new(methodkeys)
+                },
+                eventParameters = parameters,
+                finalConditions = choiceNode.finalConditions.ToArray()
+            };
+        }
+        else if (node is DSP_StaticEventNode staticEventNode)
+        {
+            data = new DSP_NodeData
+            {
+                id = nodes.ToList().FindIndex(n => n == node),
+                nodeType = DSP_NodeType.StaticEvent,
+                position = node.GetPosition().position,
+                values = new SerializableValue[]
+                {
+                        new(staticEventNode.rowCount),
+                        // read directly from tracked references, not finalActions
+                        new(staticEventNode.assignedObjects.Select(o => o).ToArray()),
+                        new(staticEventNode.finalActions.Select(a =>
+                        {
+                            if (a == null) return null;
+                            if (a.isStatic)
+                            {
+                                Type t = Type.GetType(a.staticTypeName);
+                                MethodInfo m = t?.GetMethod(a.methodName, BindingFlags.Static | BindingFlags.Public);
+                                string sig = m != null ? BuildSignature(m) : $"{a.methodName}()";
+                                return $"Static/{sig}";
+                            }
+                            else
+                            {
+                                MethodInfo m = a.target?.GetType().GetMethod(a.methodName,
+                                    BindingFlags.Instance | BindingFlags.Public);
+                                string sig = m != null ? BuildSignature(m) : $"{a.methodName}()";
+                                return $"{a.target?.GetType().Name}/{sig}";
+                            }
+                        }).ToArray())
+                },
+                eventParameters = staticEventNode.parameters.Select(p => new SerializableValue(p)).ToArray(),
+                finalEvents = staticEventNode.finalActions.ToArray()
+            };
+        }
+        else if (node is DSP_SceneEventNode sceneEventNode)
+        {
+            data = new DSP_NodeData
+            {
+                id = nodes.ToList().FindIndex(n => n == node),
+                nodeType = DSP_NodeType.SceneEvent,
+                position = node.GetPosition().position,
+                values = new SerializableValue[]
+                {
+                        new(sceneEventNode.eventAsset)
+                }
+            };
+        }
+        else if (node is DSP_ConditionNode conditionNode)
+        {
+            string methodKey = null;
+            if (conditionNode.finalCondition != null)
+            {
+                methodKey = conditionNode.finalCondition.isStatic
+                    ? $"Static/{BuildSignature(conditionNode.finalCondition)}"
+                    : $"{conditionNode.assignedObject?.GetType().Name}/{BuildSignature(conditionNode.finalCondition)}";
+            }
+
+            data = new DSP_NodeData
+            {
+                id = nodes.ToList().FindIndex(n => n == node),
+                nodeType = DSP_NodeType.Condition,
+                position = node.GetPosition().position,
+                values = new SerializableValue[]
+                {
+                        new(conditionNode.assignedObject),
+                        new(methodKey)
+                },
+                eventParameters = conditionNode.finalCondition?.parameter != null
+                    ? new SerializableValue[] { conditionNode.finalCondition.parameter }
+                    : null,
+                finalConditions = new SerializableCondition[] { conditionNode.finalCondition }
+            };
+        }
+
+        return data;
+    }
     string BuildSignature(MethodInfo method)
     {
         string paramList = string.Join(", ", method.GetParameters().Select(p => p.ParameterType.Name));
@@ -337,14 +429,65 @@ public class DSP_NodeGraphView : GraphView
 
     public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
     {
+        evt.StopPropagation(); // prevent the default empty dropdown menu from also appearing
+
         Vector2 mousePos = this.ChangeCoordinatesTo(contentViewContainer, evt.localMousePosition);
 
-        evt.menu.AppendAction("Dialogue Node", (a) => AddElement(new DSP_DialogueNode(mousePos)));
-        evt.menu.AppendAction("Choice Node", (a) => AddElement(new DSP_ChoiceNode(mousePos)));
-        evt.menu.AppendAction("Static Event Node", (a) => AddElement(new DSP_StaticEventNode(mousePos)));
-        evt.menu.AppendAction("Scene Event Node", (a) => AddElement(new DSP_SceneEventNode(mousePos)));
-        evt.menu.AppendAction("Condition Node", (a) => AddElement(new DSP_ConditionNode(mousePos)));
+        GenericMenu menu = new GenericMenu();
+        PopulateNodeCreationMenu(menu, mousePos);
+        menu.ShowAsContext();
     }
+    public void PopulateNodeCreationMenu(GenericMenu menu, Vector2 pos, Port port = null, Direction dir = default)
+    {
+        menu.AddItem(new GUIContent("Dialogue Node"), false, () => CreateNode(() => new DSP_DialogueNode(pos), port, dir));
+        menu.AddItem(new GUIContent("Choice Node"), false, () => CreateNode(() => new DSP_ChoiceNode(pos), port, dir));
+        menu.AddItem(new GUIContent("Static Event Node"), false, () => CreateNode(() => new DSP_StaticEventNode(pos), port, dir));
+        menu.AddItem(new GUIContent("Scene Event Node"), false, () => CreateNode(() => new DSP_SceneEventNode(pos), port, dir));
+        menu.AddItem(new GUIContent("Condition Node"), false, () => CreateNode(() => new DSP_ConditionNode(pos), port, dir));
+    }
+
+    void CreateNode(Func<Node> factory, Port draggedPort, Direction draggedDirection)
+    {
+        Node newNode = factory();
+        AddNodeWithUndo(newNode);
+
+        if (draggedPort != null)
+        {
+            Direction targetDirection = draggedDirection == Direction.Output ? Direction.Input : Direction.Output;
+            Port targetPort = newNode.GetPorts(targetDirection).FirstOrDefault();
+
+            if (targetPort != null)
+            {
+                Edge edge = new Edge();
+
+                if (draggedDirection == Direction.Output)
+                {
+                    edge.output = draggedPort;
+                    edge.input = targetPort;
+                }
+                else
+                {
+                    edge.output = targetPort;
+                    edge.input = draggedPort;
+                }
+
+                // go through the listener to disconnect edges if capactity is single
+                new DSP_EdgeConnectorListener(this).OnDrop(this, edge);
+            }
+        }
+    }
+    void AddNodeWithUndo(Node node)
+    {
+        SaveToAsset(DSP_EditorWindow.dialogueGraphAsset);
+        DSP_EditorWindow.window.RecordChange("Add Node");
+        AddElement(node);
+
+        EditorApplication.delayCall += () =>
+        {
+            SaveToAsset(DSP_EditorWindow.dialogueGraphAsset); // delayed so constructor can complete
+        };
+    }
+
     public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
     {
         var compatiblePorts = new List<Port>();
@@ -381,14 +524,94 @@ public class DSP_NodeGraphView : GraphView
     }
 }
 
+public class DSP_EdgeConnectorListener : IEdgeConnectorListener
+{
+    private readonly DSP_NodeGraphView graphView;
+    
+    private GraphViewChange m_GraphViewChange;
+    private List<Edge> m_EdgesToCreate;
+    private List<GraphElement> m_EdgesToDelete;
+    
+    public DSP_EdgeConnectorListener(DSP_NodeGraphView graphView)
+    {
+        this.graphView = graphView;
+
+        m_EdgesToCreate = new List<Edge>();
+        m_EdgesToDelete = new List<GraphElement>();
+        m_GraphViewChange.edgesToCreate = m_EdgesToCreate;
+    }
+    public void OnDrop(GraphView graphView, Edge edge)
+    {
+        m_EdgesToCreate.Clear();
+        m_EdgesToCreate.Add(edge);
+        m_EdgesToDelete.Clear();
+        if (edge.input.capacity == Capacity.Single)
+        {
+            foreach (Edge connection in edge.input.connections)
+            {
+                if (connection != edge)
+                {
+                    m_EdgesToDelete.Add(connection);
+                }
+            }
+        }
+
+        if (edge.output.capacity == Capacity.Single)
+        {
+            foreach (Edge connection2 in edge.output.connections)
+            {
+                if (connection2 != edge)
+                {
+                    m_EdgesToDelete.Add(connection2);
+                }
+            }
+        }
+
+        if (m_EdgesToDelete.Count > 0)
+        {
+            graphView.DeleteElements(m_EdgesToDelete);
+        }
+
+        List<Edge> edgesToCreate = m_EdgesToCreate;
+        if (graphView.graphViewChanged != null)
+        {
+            edgesToCreate = graphView.graphViewChanged(m_GraphViewChange).edgesToCreate;
+        }
+
+        foreach (Edge item in edgesToCreate)
+        {
+            graphView.AddElement(item);
+            edge.input.Connect(item);
+            edge.output.Connect(item);
+        }
+    }
+
+    public void OnDropOutsidePort(Edge edge, Vector2 position)
+    {
+        Port fromPort = edge.output != null ? edge.output : edge.input;
+        Direction direction = edge.output != null ? Direction.Output : Direction.Input;
+
+        Vector2 graphPosition = graphView.ChangeCoordinatesTo(graphView.contentViewContainer,
+            graphView.WorldToLocal(position));
+
+        GenericMenu menu = new GenericMenu();
+        graphView.PopulateNodeCreationMenu(menu, graphPosition, fromPort, direction);
+        menu.ShowAsContext();
+    }
+}
 public static class DSP_NodeExtensions
 {
     public static Port GeneratePort(this Node node, Direction direction, Port.Capacity capacity = Port.Capacity.Single, string portName = "", System.Type type = null)
     {
-        type ??= typeof(float); // fallback to float if no type provided
+        type ??= typeof(float);
 
         var port = node.InstantiatePort(Orientation.Horizontal, direction, capacity, type);
         port.portName = portName;
+
+        // Replace default edge connector with custom listener
+        port.RemoveManipulator(port.edgeConnector);
+        port.AddManipulator(new EdgeConnector<Edge>(new DSP_EdgeConnectorListener(DSP_EditorWindow.graphView)));
+
         return port;
     }
     public static void AddInputPort(this Node node, string name = "In", Port.Capacity capacity = Port.Capacity.Multi, Type type = null)
@@ -420,6 +643,16 @@ public static class DSP_NodeExtensions
     public static void FixTransparency(this Node node)
     {
         node.mainContainer.style.backgroundColor = new Color(0.15f, 0.15f, 0.15f, 1f);
+    }
+
+    public static void StartUndoRecord(this Node node)
+    {
+        DSP_EditorWindow.graphView.SaveToAsset(DSP_EditorWindow.dialogueGraphAsset);
+    }
+    public static void EndUndoRecord(this Node node, string label = "node changed")
+    {
+        DSP_EditorWindow.window.RecordChange(label);
+        DSP_EditorWindow.graphView.SaveToAsset(DSP_EditorWindow.dialogueGraphAsset);
     }
 }
 
@@ -505,6 +738,8 @@ public class DSP_DialogueNode : Node
     private VisualElement previewContainer;
     private static Texture2D placeholderPortrait;
 
+    private bool hasTextChanged = false;
+
     public DSP_DialogueNode(Vector2 position, SerializableValue[] values = null)
     {
         // load values if they exist
@@ -548,8 +783,12 @@ public class DSP_DialogueNode : Node
 
         characterField.RegisterValueChangedCallback(evt =>
         {
+            this.StartUndoRecord();
+
             characterAsset = evt.newValue as DSP_CharacterAsset;
             UpdateCharacterPreview();
+
+            this.EndUndoRecord();
         });
         characterContainer.Add(characterField);
 
@@ -601,7 +840,14 @@ public class DSP_DialogueNode : Node
             value = dialogueAudioClip
         };
         audioField.style.alignSelf = Align.FlexEnd;
-        audioField.RegisterValueChangedCallback(evt => { dialogueAudioClip = evt.newValue as AudioClip; });
+        audioField.RegisterValueChangedCallback(evt => 
+        {
+            this.StartUndoRecord();
+
+            dialogueAudioClip = evt.newValue as AudioClip;
+
+            this.EndUndoRecord();
+        });
         audioContainer.Add(audioField);
 
         mainContainer.Add(audioContainer);
@@ -618,7 +864,6 @@ public class DSP_DialogueNode : Node
         textLabel.style.paddingLeft = 2;
         
         mainContainer.Add(textLabel);
-        
 
         // TextField without built-in label
         var textField = new TextField
@@ -628,7 +873,10 @@ public class DSP_DialogueNode : Node
         };
         textField.style.flexWrap = Wrap.Wrap;
 
-        textField.RegisterValueChangedCallback(evt => dialogueText = evt.newValue);
+        textField.RegisterValueChangedCallback(evt => { dialogueText = evt.newValue; hasTextChanged = true; } );
+        textField.RegisterCallback<FocusInEvent>(evt => { this.StartUndoRecord(); hasTextChanged = false; } );
+        textField.RegisterCallback<FocusOutEvent>(evt => { if (hasTextChanged) { this.EndUndoRecord(); } } );
+
         mainContainer.Add(textField);
 
         RefreshExpandedState();
@@ -679,6 +927,8 @@ public class DSP_ChoiceNode : Node
     public List<SerializableCondition> finalConditions = new();
     public List<Object> assignedObjects = new();
 
+    public bool hasTextChanged = false;
+
     public DSP_ChoiceNode(Vector2 position, SerializableValue[] values = null, SerializableValue[] parameters = null)
     {
         title = "Choice";
@@ -707,7 +957,7 @@ public class DSP_ChoiceNode : Node
                 bool conditionalState = conditionalStates != null ? conditionalStates[i] : false;
                 Object savedObject = savedObjects != null ? savedObjects[i] : null;
                 string savedMethod = savedMethods != null ? savedMethods[i] : null;
-                object savedParam = savedParams != null ? savedParams[i].GetValue() : null;
+                object savedParam = savedParams != null ? savedParams[i]?.GetValue() : null;
 
                 AddChoice(choiceContainer, choiceText, conditionalState, savedObject, savedMethod, savedParam);
             }
@@ -724,11 +974,21 @@ public class DSP_ChoiceNode : Node
         VisualElement buttonContainer = new VisualElement();
         buttonContainer.style.flexDirection = FlexDirection.Row;
 
-        Button removeButton = new Button(() => RemoveChoice(choiceContainer))
+        Button removeButton = new Button(() =>
+        {
+            this.StartUndoRecord();
+            RemoveChoice(choiceContainer);
+            this.EndUndoRecord();
+        })
         {
             text = "-"
         };
-        Button addButton = new Button(() => AddChoice(choiceContainer))
+        Button addButton = new Button(() =>
+        {
+            this.StartUndoRecord();
+            AddChoice(choiceContainer);
+            this.EndUndoRecord();
+        })
         {
             text = "+"
         };
@@ -763,7 +1023,9 @@ public class DSP_ChoiceNode : Node
         Toggle conditionalToggle = new Toggle();
         conditionalToggle.RegisterValueChangedCallback(evt =>
         {
+            this.StartUndoRecord();
             ToggleConditional(index, chunk, evt.newValue);
+            this.EndUndoRecord();
         });
 
         row.Add(conditionalToggle);
@@ -776,6 +1038,10 @@ public class DSP_ChoiceNode : Node
         };
         textField.style.marginRight = 5;
         textField.style.flexGrow = 1;
+
+        textField.RegisterValueChangedCallback(evt => { hasTextChanged = true; });
+        textField.RegisterCallback<FocusInEvent>(evt => { this.StartUndoRecord(); hasTextChanged = false; });
+        textField.RegisterCallback<FocusOutEvent>(evt => { if (hasTextChanged) { this.EndUndoRecord(); } });
 
         row.Add(textField);
 
@@ -856,9 +1122,17 @@ public class DSP_ChoiceNode : Node
             dropdownField.style.flexGrow = 1;
 
             objectField.RegisterValueChangedCallback(evt =>
-                OnObjectAssigned(index, evt.newValue, dropdownField));
+            {
+                this.StartUndoRecord();
+                OnObjectAssigned(index, evt.newValue, dropdownField);
+                this.EndUndoRecord();
+            });
             dropdownField.RegisterValueChangedCallback(evt =>
-                OnMenuValueChanged(index, evt.newValue, conditionChunk));
+            {
+                this.StartUndoRecord();
+                OnMenuValueChanged(index, evt.newValue, conditionChunk);
+                this.EndUndoRecord();
+            });
 
             row.Add(objectField);
             row.Add(dropdownField);
@@ -871,7 +1145,7 @@ public class DSP_ChoiceNode : Node
                 objectField.value = savedObject;
                 OnObjectAssigned(index, savedObject, dropdownField);
 
-                if (savedMethod != null)
+                if (!string.IsNullOrEmpty(savedMethod))
                 {
                     dropdownField.value = savedMethod;
                     OnMenuValueChanged(index, savedMethod, conditionChunk, savedParam);
@@ -993,7 +1267,7 @@ public class DSP_ChoiceNode : Node
         {
             var field = new ObjectField { allowSceneObjects = false, objectType = paramType };
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
             if (savedParam != null) field.value = savedParam as Object;
             Commit(field.value);
             paramRow.Add(field);
@@ -1002,7 +1276,7 @@ public class DSP_ChoiceNode : Node
         {
             var field = new TextField();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
             if (savedParam != null) field.value = (string)savedParam;
             Commit(field.value);
             paramRow.Add(field);
@@ -1011,7 +1285,7 @@ public class DSP_ChoiceNode : Node
         {
             var field = new IntegerField();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
             if (savedParam != null) field.value = (int)savedParam;
             Commit(field.value);
             paramRow.Add(field);
@@ -1020,7 +1294,7 @@ public class DSP_ChoiceNode : Node
         {
             var field = new FloatField();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
             if (savedParam != null) field.value = (float)savedParam;
             Commit(field.value);
             paramRow.Add(field);
@@ -1029,7 +1303,7 @@ public class DSP_ChoiceNode : Node
         {
             var field = new Toggle();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
             if (savedParam != null) field.value = (bool)savedParam;
             Commit(field.value);
             paramRow.Add(field);
@@ -1108,8 +1382,8 @@ public class DSP_StaticEventNode : Node
         // +/- buttons
         VisualElement buttonContainer = new VisualElement();
         buttonContainer.style.flexDirection = FlexDirection.Row;
-        buttonContainer.Add(new Button(() => RemoveEventRow(eventContainer)) { text = "-" });
-        buttonContainer.Add(new Button(() => AddEventRow(eventContainer)) { text = "+" });
+        buttonContainer.Add(new Button(() => { this.StartUndoRecord(); RemoveEventRow(eventContainer); this.EndUndoRecord(); }) { text = "-" });
+        buttonContainer.Add(new Button(() => { this.StartUndoRecord(); AddEventRow(eventContainer); this.EndUndoRecord(); }) { text = "+" });
         mainContainer.Add(buttonContainer);
 
         RefreshExpandedState();
@@ -1142,11 +1416,17 @@ public class DSP_StaticEventNode : Node
         while (assignedObjects.Count <= index) assignedObjects.Add(null);
         objectField.RegisterValueChangedCallback(evt =>
         {
+            this.StartUndoRecord();
             assignedObjects[index] = evt.newValue;
             OnObjectAssigned(evt.newValue, dropdownField, index);
+            this.EndUndoRecord();
         });
         dropdownField.RegisterValueChangedCallback(evt =>
-            OnMenuValueChanged(evt.newValue, lines, index));
+        {
+            this.StartUndoRecord();
+            OnMenuValueChanged(evt.newValue, lines, index);
+            this.EndUndoRecord();
+        });
 
         row.Add(objectField);
         row.Add(dropdownField);
@@ -1160,7 +1440,7 @@ public class DSP_StaticEventNode : Node
             objectField.value = assignedObject;
             OnObjectAssigned(assignedObject, dropdownField, index);
 
-            if (chosenMethod != null)
+            if (!string.IsNullOrEmpty(chosenMethod))
             {
                 dropdownField.value = chosenMethod;
                 OnMenuValueChanged(chosenMethod, lines, index, parameter);
@@ -1245,7 +1525,12 @@ public class DSP_StaticEventNode : Node
         var oldRow = lines.Children().FirstOrDefault(c => c.name == $"ParamRow_{index}");
         if (oldRow != null) lines.Remove(oldRow);
 
-        if (optionName == "No Function" || !_rowMethodMaps[index].ContainsKey(optionName)) return;
+        if (optionName == "No Function" || !_rowMethodMaps[index].ContainsKey(optionName)) 
+        {
+            while (finalActions.Count <= index) finalActions.Add(null);
+            finalActions[index] = null;
+            return;
+        }
 
         var (method, instanceTarget) = _rowMethodMaps[index][optionName];
         bool isStatic = instanceTarget == null;
@@ -1286,7 +1571,7 @@ public class DSP_StaticEventNode : Node
         {
             var field = new ObjectField { allowSceneObjects = false, objectType = paramType };
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
 
             if (savedParam != null) field.value = savedParam as Object;
             Commit(field.value); // always commit, whether saved or default
@@ -1297,7 +1582,7 @@ public class DSP_StaticEventNode : Node
         {
             var field = new TextField();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
 
             if (savedParam != null) field.value = (string)savedParam;
             Commit(field.value);
@@ -1308,7 +1593,7 @@ public class DSP_StaticEventNode : Node
         {
             var field = new IntegerField();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
 
             if (savedParam != null) field.value = (int)savedParam;
             Commit(field.value);
@@ -1319,7 +1604,7 @@ public class DSP_StaticEventNode : Node
         {
             var field = new FloatField();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
 
             if (savedParam != null) field.value = (float)savedParam;
             Commit(field.value);
@@ -1330,7 +1615,7 @@ public class DSP_StaticEventNode : Node
         {
             var field = new Toggle();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
 
             if (savedParam != null) field.value = (bool)savedParam;
             Commit(field.value);
@@ -1341,7 +1626,6 @@ public class DSP_StaticEventNode : Node
         lines.Add(paramRow);
     }
 
-    // -------------------------------------------------------------------------
     string BuildSignature(MethodInfo method)
     {
         string paramList = string.Join(", ", method.GetParameters().Select(p => p.ParameterType.Name));
@@ -1384,7 +1668,12 @@ public class DSP_SceneEventNode : Node
             allowSceneObjects = false
         };
 
-        eventField.RegisterValueChangedCallback(evt => eventAsset = evt.newValue as DSP_SceneEvent);
+        eventField.RegisterValueChangedCallback(evt =>
+        {
+            this.StartUndoRecord();
+            eventAsset = evt.newValue as DSP_SceneEvent;
+            this.EndUndoRecord();
+        });
 
         mainContainer.Add(eventField);
 
@@ -1433,11 +1722,17 @@ public class DSP_ConditionNode : Node
 
         objectField.RegisterValueChangedCallback(evt =>
         {
+            this.StartUndoRecord();
             assignedObject = evt.newValue;
             OnObjectAssigned(evt.newValue, dropdownField);
+            this.EndUndoRecord();
         });
         dropdownField.RegisterValueChangedCallback(evt =>
-            OnMenuValueChanged(evt.newValue, lines));
+        {
+            this.StartUndoRecord();
+            OnMenuValueChanged(evt.newValue, lines);
+            this.EndUndoRecord();
+        });
 
         row.Add(objectField);
         row.Add(dropdownField);
@@ -1568,7 +1863,7 @@ public class DSP_ConditionNode : Node
         {
             var field = new ObjectField { allowSceneObjects = false, objectType = paramType };
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
             if (savedParam != null) field.value = savedParam as Object;
             Commit(field.value);
             paramRow.Add(field);
@@ -1577,7 +1872,7 @@ public class DSP_ConditionNode : Node
         {
             var field = new TextField();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
             if (savedParam != null) field.value = (string)savedParam;
             Commit(field.value);
             paramRow.Add(field);
@@ -1586,7 +1881,7 @@ public class DSP_ConditionNode : Node
         {
             var field = new IntegerField();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
             if (savedParam != null) field.value = (int)savedParam;
             Commit(field.value);
             paramRow.Add(field);
@@ -1595,7 +1890,7 @@ public class DSP_ConditionNode : Node
         {
             var field = new FloatField();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
             if (savedParam != null) field.value = (float)savedParam;
             Commit(field.value);
             paramRow.Add(field);
@@ -1604,7 +1899,7 @@ public class DSP_ConditionNode : Node
         {
             var field = new Toggle();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
             if (savedParam != null) field.value = (bool)savedParam;
             Commit(field.value);
             paramRow.Add(field);
