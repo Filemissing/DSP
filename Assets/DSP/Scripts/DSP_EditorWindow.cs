@@ -10,6 +10,7 @@ using UnityEditor.Rendering;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static UnityEditor.Experimental.GraphView.Port;
 using Button = UnityEngine.UIElements.Button;
 using Edge = UnityEditor.Experimental.GraphView.Edge;
 using Image = UnityEngine.UIElements.Image;
@@ -429,14 +430,65 @@ public class DSP_NodeGraphView : GraphView
 
     public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
     {
+        evt.StopPropagation(); // prevent the default empty dropdown menu from also appearing
+
         Vector2 mousePos = this.ChangeCoordinatesTo(contentViewContainer, evt.localMousePosition);
 
-        evt.menu.AppendAction("Dialogue Node", (a) => AddNodeWithUndo(new DSP_DialogueNode(mousePos)));
-        evt.menu.AppendAction("Choice Node", (a) => AddNodeWithUndo(new DSP_ChoiceNode(mousePos)));
-        evt.menu.AppendAction("Static Event Node", (a) => AddNodeWithUndo(new DSP_StaticEventNode(mousePos)));
-        evt.menu.AppendAction("Scene Event Node", (a) => AddNodeWithUndo(new DSP_SceneEventNode(mousePos)));
-        evt.menu.AppendAction("Condition Node", (a) => AddNodeWithUndo(new DSP_ConditionNode(mousePos)));
+        GenericMenu menu = new GenericMenu();
+        PopulateNodeCreationMenu(menu, mousePos);
+        menu.ShowAsContext();
     }
+    public void PopulateNodeCreationMenu(GenericMenu menu, Vector2 pos, Port port = null, Direction dir = default)
+    {
+        menu.AddItem(new GUIContent("Dialogue Node"), false, () => CreateNode(() => new DSP_DialogueNode(pos), port, dir));
+        menu.AddItem(new GUIContent("Choice Node"), false, () => CreateNode(() => new DSP_ChoiceNode(pos), port, dir));
+        menu.AddItem(new GUIContent("Static Event Node"), false, () => CreateNode(() => new DSP_StaticEventNode(pos), port, dir));
+        menu.AddItem(new GUIContent("Scene Event Node"), false, () => CreateNode(() => new DSP_SceneEventNode(pos), port, dir));
+        menu.AddItem(new GUIContent("Condition Node"), false, () => CreateNode(() => new DSP_ConditionNode(pos), port, dir));
+    }
+
+    void CreateNode(Func<Node> factory, Port draggedPort, Direction draggedDirection)
+    {
+        Node newNode = factory();
+        AddNodeWithUndo(newNode);
+
+        if (draggedPort != null)
+        {
+            Direction targetDirection = draggedDirection == Direction.Output ? Direction.Input : Direction.Output;
+            Port targetPort = newNode.GetPorts(targetDirection).FirstOrDefault();
+
+            if (targetPort != null)
+            {
+                Edge edge = new Edge();
+
+                if (draggedDirection == Direction.Output)
+                {
+                    edge.output = draggedPort;
+                    edge.input = targetPort;
+                }
+                else
+                {
+                    edge.output = targetPort;
+                    edge.input = draggedPort;
+                }
+
+                // go through the listener to disconnect edges if capactity is single
+                new DSP_EdgeConnectorListener(this).OnDrop(this, edge);
+            }
+        }
+    }
+    void AddNodeWithUndo(Node node)
+    {
+        SaveToAsset(DSP_EditorWindow.dialogueGraphAsset);
+        DSP_EditorWindow.window.RecordChange("Add Node");
+        AddElement(node);
+
+        EditorApplication.delayCall += () =>
+        {
+            SaveToAsset(DSP_EditorWindow.dialogueGraphAsset); // delayed so constructor can complete
+        };
+    }
+
     public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
     {
         var compatiblePorts = new List<Port>();
@@ -456,18 +508,6 @@ public class DSP_NodeGraphView : GraphView
         return compatiblePorts;
     }
 
-    void AddNodeWithUndo(Node node)
-    {
-        SaveToAsset(DSP_EditorWindow.dialogueGraphAsset);
-        DSP_EditorWindow.window.RecordChange("Add Node");
-        AddElement(node);
-
-        EditorApplication.delayCall += () =>
-        {
-            SaveToAsset(DSP_EditorWindow.dialogueGraphAsset); // delayed so constructor can complete
-        };
-    }
-
     private void OnEditorUpdate()
     {
         foreach (var element in nodes)
@@ -485,14 +525,94 @@ public class DSP_NodeGraphView : GraphView
     }
 }
 
+public class DSP_EdgeConnectorListener : IEdgeConnectorListener
+{
+    private readonly DSP_NodeGraphView graphView;
+    
+    private GraphViewChange m_GraphViewChange;
+    private List<Edge> m_EdgesToCreate;
+    private List<GraphElement> m_EdgesToDelete;
+    
+    public DSP_EdgeConnectorListener(DSP_NodeGraphView graphView)
+    {
+        this.graphView = graphView;
+
+        m_EdgesToCreate = new List<Edge>();
+        m_EdgesToDelete = new List<GraphElement>();
+        m_GraphViewChange.edgesToCreate = m_EdgesToCreate;
+    }
+    public void OnDrop(GraphView graphView, Edge edge)
+    {
+        m_EdgesToCreate.Clear();
+        m_EdgesToCreate.Add(edge);
+        m_EdgesToDelete.Clear();
+        if (edge.input.capacity == Capacity.Single)
+        {
+            foreach (Edge connection in edge.input.connections)
+            {
+                if (connection != edge)
+                {
+                    m_EdgesToDelete.Add(connection);
+                }
+            }
+        }
+
+        if (edge.output.capacity == Capacity.Single)
+        {
+            foreach (Edge connection2 in edge.output.connections)
+            {
+                if (connection2 != edge)
+                {
+                    m_EdgesToDelete.Add(connection2);
+                }
+            }
+        }
+
+        if (m_EdgesToDelete.Count > 0)
+        {
+            graphView.DeleteElements(m_EdgesToDelete);
+        }
+
+        List<Edge> edgesToCreate = m_EdgesToCreate;
+        if (graphView.graphViewChanged != null)
+        {
+            edgesToCreate = graphView.graphViewChanged(m_GraphViewChange).edgesToCreate;
+        }
+
+        foreach (Edge item in edgesToCreate)
+        {
+            graphView.AddElement(item);
+            edge.input.Connect(item);
+            edge.output.Connect(item);
+        }
+    }
+
+    public void OnDropOutsidePort(Edge edge, Vector2 position)
+    {
+        Port fromPort = edge.output != null ? edge.output : edge.input;
+        Direction direction = edge.output != null ? Direction.Output : Direction.Input;
+
+        Vector2 graphPosition = graphView.ChangeCoordinatesTo(graphView.contentViewContainer,
+            graphView.WorldToLocal(position));
+
+        GenericMenu menu = new GenericMenu();
+        graphView.PopulateNodeCreationMenu(menu, graphPosition, fromPort, direction);
+        menu.ShowAsContext();
+    }
+}
 public static class DSP_NodeExtensions
 {
     public static Port GeneratePort(this Node node, Direction direction, Port.Capacity capacity = Port.Capacity.Single, string portName = "", System.Type type = null)
     {
-        type ??= typeof(float); // fallback to float if no type provided
+        type ??= typeof(float);
 
         var port = node.InstantiatePort(Orientation.Horizontal, direction, capacity, type);
         port.portName = portName;
+
+        // Replace default edge connector with custom listener
+        port.RemoveManipulator(port.edgeConnector);
+        port.AddManipulator(new EdgeConnector<Edge>(new DSP_EdgeConnectorListener(DSP_EditorWindow.graphView)));
+
         return port;
     }
     public static void AddInputPort(this Node node, string name = "In", Port.Capacity capacity = Port.Capacity.Multi, Type type = null)
