@@ -66,30 +66,50 @@ public class DSP_EditorWindow : EditorWindow
                         break;
 
                     case KeyCode.C:
-                        copiedNodes.Clear();
-                        foreach (Node node in graphView.selection.OfType<Node>().ToList())
-                        {
-                            if ((node.capabilities & Capabilities.Deletable) != 0)
-                                copiedNodes.Add(graphView.SaveNode(node));
-                        }
-
+                        Copy();
                         evt.StopPropagation();
                         break;
 
                     case KeyCode.V:
-                        foreach (DSP_NodeData data in copiedNodes)
-                        {
-                            data.position += new Vector2(40, 40);
+                        Paste();
+                        evt.StopPropagation();
+                        break;
 
-                            Node newNode = graphView.CreateNodeInstance(data);
-                            graphView.AddElement(newNode);
-                        }
+                    case KeyCode.X:
+                        Copy();
+                        foreach (Node node in graphView.selection.OfType<Node>().ToList())
+                            node.parent.Remove(node);
+                        evt.StopPropagation();
+                        break;
 
+                    case KeyCode.D:
+                        Copy();
+                        Paste();
                         evt.StopPropagation();
                         break;
                 }
             }
         });
+    }
+
+    void Copy()
+    {
+        copiedNodes.Clear();
+        foreach (Node node in graphView.selection.OfType<Node>().ToList())
+        {
+            if ((node.capabilities & Capabilities.Deletable) != 0)
+                copiedNodes.Add(graphView.SaveNode(node));
+        }
+    }
+    void Paste()
+    {
+        foreach (DSP_NodeData data in copiedNodes)
+        {
+            data.position += new Vector2(40, 40);
+
+            Node newNode = graphView.CreateNodeInstance(data);
+            graphView.AddElement(newNode);
+        }
     }
 }
 
