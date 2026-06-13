@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
+using UnityEditor.Rendering;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -28,7 +30,7 @@ public class DSP_EditorWindow : EditorWindow
         graphView.LoadFromAsset(dialogueGraphAsset);
     }
 
-    static DSP_NodeGraphView graphView;
+    public static DSP_NodeGraphView graphView;
     static Toolbar toolbar;
 
     List<DSP_NodeData> copiedNodes = new();
@@ -128,6 +130,8 @@ public class DSP_EditorWindow : EditorWindow
     }
     void Paste()
     {
+        graphView.SaveToAsset(dialogueGraphAsset);
+
         foreach (DSP_NodeData data in copiedNodes)
         {
             data.position += new Vector2(40, 40);
@@ -135,6 +139,9 @@ public class DSP_EditorWindow : EditorWindow
             Node newNode = graphView.CreateNodeInstance(data);
             graphView.AddElement(newNode);
         }
+
+        RecordChange("Paste");
+        graphView.SaveToAsset(dialogueGraphAsset);
     }
 }
 
@@ -518,6 +525,16 @@ public static class DSP_NodeExtensions
     {
         node.mainContainer.style.backgroundColor = new Color(0.15f, 0.15f, 0.15f, 1f);
     }
+
+    public static void StartUndoRecord(this Node node)
+    {
+        DSP_EditorWindow.graphView.SaveToAsset(DSP_EditorWindow.dialogueGraphAsset);
+    }
+    public static void EndUndoRecord(this Node node, string label = "node changed")
+    {
+        DSP_EditorWindow.window.RecordChange(label);
+        DSP_EditorWindow.graphView.SaveToAsset(DSP_EditorWindow.dialogueGraphAsset);
+    }
 }
 
 public class DSP_StartNode : Node
@@ -602,6 +619,8 @@ public class DSP_DialogueNode : Node
     private VisualElement previewContainer;
     private static Texture2D placeholderPortrait;
 
+    private bool hasTextChanged = false;
+
     public DSP_DialogueNode(Vector2 position, SerializableValue[] values = null)
     {
         // load values if they exist
@@ -645,8 +664,12 @@ public class DSP_DialogueNode : Node
 
         characterField.RegisterValueChangedCallback(evt =>
         {
+            this.StartUndoRecord();
+
             characterAsset = evt.newValue as DSP_CharacterAsset;
             UpdateCharacterPreview();
+
+            this.EndUndoRecord();
         });
         characterContainer.Add(characterField);
 
@@ -698,7 +721,14 @@ public class DSP_DialogueNode : Node
             value = dialogueAudioClip
         };
         audioField.style.alignSelf = Align.FlexEnd;
-        audioField.RegisterValueChangedCallback(evt => { dialogueAudioClip = evt.newValue as AudioClip; });
+        audioField.RegisterValueChangedCallback(evt => 
+        {
+            this.StartUndoRecord();
+
+            dialogueAudioClip = evt.newValue as AudioClip;
+
+            this.EndUndoRecord();
+        });
         audioContainer.Add(audioField);
 
         mainContainer.Add(audioContainer);
@@ -715,7 +745,6 @@ public class DSP_DialogueNode : Node
         textLabel.style.paddingLeft = 2;
         
         mainContainer.Add(textLabel);
-        
 
         // TextField without built-in label
         var textField = new TextField
@@ -725,7 +754,10 @@ public class DSP_DialogueNode : Node
         };
         textField.style.flexWrap = Wrap.Wrap;
 
-        textField.RegisterValueChangedCallback(evt => dialogueText = evt.newValue);
+        textField.RegisterValueChangedCallback(evt => { dialogueText = evt.newValue; hasTextChanged = true; } );
+        textField.RegisterCallback<FocusInEvent>(evt => { this.StartUndoRecord(); hasTextChanged = false; } );
+        textField.RegisterCallback<FocusOutEvent>(evt => { if (hasTextChanged) { this.EndUndoRecord(); } } );
+
         mainContainer.Add(textField);
 
         RefreshExpandedState();
@@ -776,6 +808,8 @@ public class DSP_ChoiceNode : Node
     public List<SerializableCondition> finalConditions = new();
     public List<Object> assignedObjects = new();
 
+    public bool hasTextChanged = false;
+
     public DSP_ChoiceNode(Vector2 position, SerializableValue[] values = null, SerializableValue[] parameters = null)
     {
         title = "Choice";
@@ -821,11 +855,21 @@ public class DSP_ChoiceNode : Node
         VisualElement buttonContainer = new VisualElement();
         buttonContainer.style.flexDirection = FlexDirection.Row;
 
-        Button removeButton = new Button(() => RemoveChoice(choiceContainer))
+        Button removeButton = new Button(() =>
+        {
+            this.StartUndoRecord();
+            RemoveChoice(choiceContainer);
+            this.EndUndoRecord();
+        })
         {
             text = "-"
         };
-        Button addButton = new Button(() => AddChoice(choiceContainer))
+        Button addButton = new Button(() =>
+        {
+            this.StartUndoRecord();
+            AddChoice(choiceContainer);
+            this.EndUndoRecord();
+        })
         {
             text = "+"
         };
@@ -860,7 +904,9 @@ public class DSP_ChoiceNode : Node
         Toggle conditionalToggle = new Toggle();
         conditionalToggle.RegisterValueChangedCallback(evt =>
         {
+            this.StartUndoRecord();
             ToggleConditional(index, chunk, evt.newValue);
+            this.EndUndoRecord();
         });
 
         row.Add(conditionalToggle);
@@ -873,6 +919,10 @@ public class DSP_ChoiceNode : Node
         };
         textField.style.marginRight = 5;
         textField.style.flexGrow = 1;
+
+        textField.RegisterValueChangedCallback(evt => { hasTextChanged = true; });
+        textField.RegisterCallback<FocusInEvent>(evt => { this.StartUndoRecord(); hasTextChanged = false; });
+        textField.RegisterCallback<FocusOutEvent>(evt => { if (hasTextChanged) { this.EndUndoRecord(); } });
 
         row.Add(textField);
 
@@ -953,9 +1003,17 @@ public class DSP_ChoiceNode : Node
             dropdownField.style.flexGrow = 1;
 
             objectField.RegisterValueChangedCallback(evt =>
-                OnObjectAssigned(index, evt.newValue, dropdownField));
+            {
+                this.StartUndoRecord();
+                OnObjectAssigned(index, evt.newValue, dropdownField);
+                this.EndUndoRecord();
+            });
             dropdownField.RegisterValueChangedCallback(evt =>
-                OnMenuValueChanged(index, evt.newValue, conditionChunk));
+            {
+                this.StartUndoRecord();
+                OnMenuValueChanged(index, evt.newValue, conditionChunk);
+                this.EndUndoRecord();
+            });
 
             row.Add(objectField);
             row.Add(dropdownField);
@@ -968,7 +1026,7 @@ public class DSP_ChoiceNode : Node
                 objectField.value = savedObject;
                 OnObjectAssigned(index, savedObject, dropdownField);
 
-                if (savedMethod != null)
+                if (!string.IsNullOrEmpty(savedMethod))
                 {
                     dropdownField.value = savedMethod;
                     OnMenuValueChanged(index, savedMethod, conditionChunk, savedParam);
@@ -1090,7 +1148,7 @@ public class DSP_ChoiceNode : Node
         {
             var field = new ObjectField { allowSceneObjects = false, objectType = paramType };
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
             if (savedParam != null) field.value = savedParam as Object;
             Commit(field.value);
             paramRow.Add(field);
@@ -1099,7 +1157,7 @@ public class DSP_ChoiceNode : Node
         {
             var field = new TextField();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
             if (savedParam != null) field.value = (string)savedParam;
             Commit(field.value);
             paramRow.Add(field);
@@ -1108,7 +1166,7 @@ public class DSP_ChoiceNode : Node
         {
             var field = new IntegerField();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
             if (savedParam != null) field.value = (int)savedParam;
             Commit(field.value);
             paramRow.Add(field);
@@ -1117,7 +1175,7 @@ public class DSP_ChoiceNode : Node
         {
             var field = new FloatField();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
             if (savedParam != null) field.value = (float)savedParam;
             Commit(field.value);
             paramRow.Add(field);
@@ -1126,7 +1184,7 @@ public class DSP_ChoiceNode : Node
         {
             var field = new Toggle();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
             if (savedParam != null) field.value = (bool)savedParam;
             Commit(field.value);
             paramRow.Add(field);
@@ -1205,8 +1263,8 @@ public class DSP_StaticEventNode : Node
         // +/- buttons
         VisualElement buttonContainer = new VisualElement();
         buttonContainer.style.flexDirection = FlexDirection.Row;
-        buttonContainer.Add(new Button(() => RemoveEventRow(eventContainer)) { text = "-" });
-        buttonContainer.Add(new Button(() => AddEventRow(eventContainer)) { text = "+" });
+        buttonContainer.Add(new Button(() => { this.StartUndoRecord(); RemoveEventRow(eventContainer); this.EndUndoRecord(); }) { text = "-" });
+        buttonContainer.Add(new Button(() => { this.StartUndoRecord(); AddEventRow(eventContainer); this.EndUndoRecord(); }) { text = "+" });
         mainContainer.Add(buttonContainer);
 
         RefreshExpandedState();
@@ -1239,11 +1297,17 @@ public class DSP_StaticEventNode : Node
         while (assignedObjects.Count <= index) assignedObjects.Add(null);
         objectField.RegisterValueChangedCallback(evt =>
         {
+            this.StartUndoRecord();
             assignedObjects[index] = evt.newValue;
             OnObjectAssigned(evt.newValue, dropdownField, index);
+            this.EndUndoRecord();
         });
         dropdownField.RegisterValueChangedCallback(evt =>
-            OnMenuValueChanged(evt.newValue, lines, index));
+        {
+            this.StartUndoRecord();
+            OnMenuValueChanged(evt.newValue, lines, index);
+            this.EndUndoRecord();
+        });
 
         row.Add(objectField);
         row.Add(dropdownField);
@@ -1257,7 +1321,7 @@ public class DSP_StaticEventNode : Node
             objectField.value = assignedObject;
             OnObjectAssigned(assignedObject, dropdownField, index);
 
-            if (chosenMethod != null)
+            if (!string.IsNullOrEmpty(chosenMethod))
             {
                 dropdownField.value = chosenMethod;
                 OnMenuValueChanged(chosenMethod, lines, index, parameter);
@@ -1342,7 +1406,12 @@ public class DSP_StaticEventNode : Node
         var oldRow = lines.Children().FirstOrDefault(c => c.name == $"ParamRow_{index}");
         if (oldRow != null) lines.Remove(oldRow);
 
-        if (optionName == "No Function" || !_rowMethodMaps[index].ContainsKey(optionName)) return;
+        if (optionName == "No Function" || !_rowMethodMaps[index].ContainsKey(optionName)) 
+        {
+            while (finalActions.Count <= index) finalActions.Add(null);
+            finalActions[index] = null;
+            return;
+        }
 
         var (method, instanceTarget) = _rowMethodMaps[index][optionName];
         bool isStatic = instanceTarget == null;
@@ -1383,7 +1452,7 @@ public class DSP_StaticEventNode : Node
         {
             var field = new ObjectField { allowSceneObjects = false, objectType = paramType };
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
 
             if (savedParam != null) field.value = savedParam as Object;
             Commit(field.value); // always commit, whether saved or default
@@ -1394,7 +1463,7 @@ public class DSP_StaticEventNode : Node
         {
             var field = new TextField();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
 
             if (savedParam != null) field.value = (string)savedParam;
             Commit(field.value);
@@ -1405,7 +1474,7 @@ public class DSP_StaticEventNode : Node
         {
             var field = new IntegerField();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
 
             if (savedParam != null) field.value = (int)savedParam;
             Commit(field.value);
@@ -1416,7 +1485,7 @@ public class DSP_StaticEventNode : Node
         {
             var field = new FloatField();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
 
             if (savedParam != null) field.value = (float)savedParam;
             Commit(field.value);
@@ -1427,7 +1496,7 @@ public class DSP_StaticEventNode : Node
         {
             var field = new Toggle();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
 
             if (savedParam != null) field.value = (bool)savedParam;
             Commit(field.value);
@@ -1438,7 +1507,6 @@ public class DSP_StaticEventNode : Node
         lines.Add(paramRow);
     }
 
-    // -------------------------------------------------------------------------
     string BuildSignature(MethodInfo method)
     {
         string paramList = string.Join(", ", method.GetParameters().Select(p => p.ParameterType.Name));
@@ -1481,7 +1549,12 @@ public class DSP_SceneEventNode : Node
             allowSceneObjects = false
         };
 
-        eventField.RegisterValueChangedCallback(evt => eventAsset = evt.newValue as DSP_SceneEvent);
+        eventField.RegisterValueChangedCallback(evt =>
+        {
+            this.StartUndoRecord();
+            eventAsset = evt.newValue as DSP_SceneEvent;
+            this.EndUndoRecord();
+        });
 
         mainContainer.Add(eventField);
 
@@ -1530,11 +1603,17 @@ public class DSP_ConditionNode : Node
 
         objectField.RegisterValueChangedCallback(evt =>
         {
+            this.StartUndoRecord();
             assignedObject = evt.newValue;
             OnObjectAssigned(evt.newValue, dropdownField);
+            this.EndUndoRecord();
         });
         dropdownField.RegisterValueChangedCallback(evt =>
-            OnMenuValueChanged(evt.newValue, lines));
+        {
+            this.StartUndoRecord();
+            OnMenuValueChanged(evt.newValue, lines);
+            this.EndUndoRecord();
+        });
 
         row.Add(objectField);
         row.Add(dropdownField);
@@ -1665,7 +1744,7 @@ public class DSP_ConditionNode : Node
         {
             var field = new ObjectField { allowSceneObjects = false, objectType = paramType };
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
             if (savedParam != null) field.value = savedParam as Object;
             Commit(field.value);
             paramRow.Add(field);
@@ -1674,7 +1753,7 @@ public class DSP_ConditionNode : Node
         {
             var field = new TextField();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
             if (savedParam != null) field.value = (string)savedParam;
             Commit(field.value);
             paramRow.Add(field);
@@ -1683,7 +1762,7 @@ public class DSP_ConditionNode : Node
         {
             var field = new IntegerField();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
             if (savedParam != null) field.value = (int)savedParam;
             Commit(field.value);
             paramRow.Add(field);
@@ -1692,7 +1771,7 @@ public class DSP_ConditionNode : Node
         {
             var field = new FloatField();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
             if (savedParam != null) field.value = (float)savedParam;
             Commit(field.value);
             paramRow.Add(field);
@@ -1701,7 +1780,7 @@ public class DSP_ConditionNode : Node
         {
             var field = new Toggle();
             field.style.flexGrow = 1;
-            field.RegisterValueChangedCallback(evt => Commit(evt.newValue));
+            field.RegisterValueChangedCallback(evt => { this.StartUndoRecord(); Commit(evt.newValue); this.EndUndoRecord(); });
             if (savedParam != null) field.value = (bool)savedParam;
             Commit(field.value);
             paramRow.Add(field);
