@@ -53,6 +53,11 @@ public class DSP_EditorWindow : EditorWindow
         rootVisualElement.Add(toolbar);
         rootVisualElement.Add(graphView);
 
+        // setup callbacks
+        graphView.graphViewChanged = OnGraphViewChanged;
+
+        Undo.undoRedoPerformed += OnUndoRedo;
+
         rootVisualElement.RegisterCallback<KeyDownEvent>(evt =>
         {
             if ((evt.modifiers & EventModifiers.Control) != 0)
@@ -90,6 +95,29 @@ public class DSP_EditorWindow : EditorWindow
                 }
             }
         });
+
+        GraphViewChange OnGraphViewChanged(GraphViewChange change)
+        {
+            if (change.elementsToRemove != null || change.edgesToCreate != null || change.movedElements != null)
+            {
+                RecordChange("Graph Edit");
+                EditorApplication.delayCall += () =>
+                {
+                    graphView.SaveToAsset(dialogueGraphAsset); // delayed so removal can complete
+                };
+            }
+            return change;
+        }
+
+        void RecordChange(string label)
+        {
+            Undo.RegisterCompleteObjectUndo(dialogueGraphAsset, label);
+        }
+
+        void OnUndoRedo()
+        {
+            graphView.LoadFromAsset(dialogueGraphAsset);
+        }
     }
 
     void Copy()
