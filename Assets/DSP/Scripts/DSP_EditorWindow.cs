@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
-using System.Xml.Schema;
-using Unity.VisualScripting;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
@@ -96,28 +94,27 @@ public class DSP_EditorWindow : EditorWindow
             }
         });
 
-        GraphViewChange OnGraphViewChanged(GraphViewChange change)
+        
+    }
+    GraphViewChange OnGraphViewChanged(GraphViewChange change)
+    {
+        if (change.elementsToRemove != null || change.edgesToCreate != null || change.movedElements != null)
         {
-            if (change.elementsToRemove != null || change.edgesToCreate != null || change.movedElements != null)
+            RecordChange("Graph Edit");
+            EditorApplication.delayCall += () =>
             {
-                RecordChange("Graph Edit");
-                EditorApplication.delayCall += () =>
-                {
-                    graphView.SaveToAsset(dialogueGraphAsset); // delayed so removal can complete
-                };
-            }
-            return change;
+                graphView.SaveToAsset(dialogueGraphAsset); // delayed so removal can complete
+            };
         }
-
-        void RecordChange(string label)
-        {
-            Undo.RegisterCompleteObjectUndo(dialogueGraphAsset, label);
-        }
-
-        void OnUndoRedo()
-        {
-            graphView.LoadFromAsset(dialogueGraphAsset);
-        }
+        return change;
+    }
+    public void RecordChange(string label)
+    {
+        Undo.RegisterCompleteObjectUndo(dialogueGraphAsset, label);
+    }
+    void OnUndoRedo()
+    {
+        graphView.LoadFromAsset(dialogueGraphAsset);
     }
 
     void Copy()
@@ -427,11 +424,11 @@ public class DSP_NodeGraphView : GraphView
     {
         Vector2 mousePos = this.ChangeCoordinatesTo(contentViewContainer, evt.localMousePosition);
 
-        evt.menu.AppendAction("Dialogue Node", (a) => AddElement(new DSP_DialogueNode(mousePos)));
-        evt.menu.AppendAction("Choice Node", (a) => AddElement(new DSP_ChoiceNode(mousePos)));
-        evt.menu.AppendAction("Static Event Node", (a) => AddElement(new DSP_StaticEventNode(mousePos)));
-        evt.menu.AppendAction("Scene Event Node", (a) => AddElement(new DSP_SceneEventNode(mousePos)));
-        evt.menu.AppendAction("Condition Node", (a) => AddElement(new DSP_ConditionNode(mousePos)));
+        evt.menu.AppendAction("Dialogue Node", (a) => AddNodeWithUndo(new DSP_DialogueNode(mousePos)));
+        evt.menu.AppendAction("Choice Node", (a) => AddNodeWithUndo(new DSP_ChoiceNode(mousePos)));
+        evt.menu.AppendAction("Static Event Node", (a) => AddNodeWithUndo(new DSP_StaticEventNode(mousePos)));
+        evt.menu.AppendAction("Scene Event Node", (a) => AddNodeWithUndo(new DSP_SceneEventNode(mousePos)));
+        evt.menu.AppendAction("Condition Node", (a) => AddNodeWithUndo(new DSP_ConditionNode(mousePos)));
     }
     public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
     {
@@ -450,6 +447,18 @@ public class DSP_NodeGraphView : GraphView
         });
 
         return compatiblePorts;
+    }
+
+    void AddNodeWithUndo(Node node)
+    {
+        SaveToAsset(DSP_EditorWindow.dialogueGraphAsset);
+        DSP_EditorWindow.window.RecordChange("Add Node");
+        AddElement(node);
+
+        EditorApplication.delayCall += () =>
+        {
+            SaveToAsset(DSP_EditorWindow.dialogueGraphAsset); // delayed so constructor can complete
+        };
     }
 
     private void OnEditorUpdate()
