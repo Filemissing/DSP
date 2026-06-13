@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Reflection;
-using Unity.Android.Gradle;
+using System.Xml.Schema;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
@@ -30,6 +32,9 @@ public class DSP_EditorWindow : EditorWindow
 
     static DSP_NodeGraphView graphView;
     static Toolbar toolbar;
+
+    List<DSP_NodeData> copiedNodes = new();
+
     private void OnEnable()
     {
         // set up Node Graph element
@@ -50,10 +55,39 @@ public class DSP_EditorWindow : EditorWindow
 
         rootVisualElement.RegisterCallback<KeyDownEvent>(evt =>
         {
-            if (evt.keyCode == KeyCode.S && evt.ctrlKey)
+            if ((evt.modifiers & EventModifiers.Control) != 0)
             {
-                graphView.SaveToAsset(dialogueGraphAsset);
-                evt.StopPropagation();
+                switch(evt.keyCode)
+                {
+                    case KeyCode.S:
+                        graphView.SaveToAsset(dialogueGraphAsset);
+
+                        evt.StopPropagation();
+                        break;
+
+                    case KeyCode.C:
+                        copiedNodes.Clear();
+                        foreach (Node node in graphView.selection.OfType<Node>().ToList())
+                        {
+                            if ((node.capabilities & Capabilities.Deletable) != 0)
+                                copiedNodes.Add(graphView.SaveNode(node));
+                        }
+
+                        evt.StopPropagation();
+                        break;
+
+                    case KeyCode.V:
+                        foreach (DSP_NodeData data in copiedNodes)
+                        {
+                            data.position += new Vector2(40, 40);
+
+                            Node newNode = graphView.CreateNodeInstance(data);
+                            graphView.AddElement(newNode);
+                        }
+
+                        evt.StopPropagation();
+                        break;
+                }
             }
         });
     }
@@ -62,7 +96,7 @@ public class DSP_EditorWindow : EditorWindow
 public class DSP_NodeGraphView : GraphView
 {
     private bool isUpdating;
-    
+
     public DSP_NodeGraphView()
     {
         style.flexGrow = 1;
@@ -94,39 +128,7 @@ public class DSP_NodeGraphView : GraphView
 
             // instantiate nodes
             foreach (DSP_NodeData nodeData in graphAsset.GetNodes())
-            {
-                // handle Event and Condition nodes separately since they require special handling
-                if (nodeData.nodeType == DSP_NodeType.StaticEvent)
-                {
-                    DSP_StaticEventNode eventNode = new DSP_StaticEventNode(nodeData.position, nodeData.values, nodeData.eventParameters);
-                    AddElement(eventNode);
-                    continue;
-                }
-                if (nodeData.nodeType == DSP_NodeType.Condition)
-                {
-                    DSP_ConditionNode eventNode = new DSP_ConditionNode(nodeData.position, nodeData.values, nodeData.eventParameters);
-                    AddElement(eventNode);
-                    continue;
-                }
-                if (nodeData.nodeType == DSP_NodeType.Choice)
-                {
-                    DSP_ChoiceNode choiceNode = new DSP_ChoiceNode(nodeData.position, nodeData.values, nodeData.eventParameters);
-                    AddElement(choiceNode);
-                    continue;
-                }
-
-                Type nodeType = nodeData.nodeType switch
-                {
-                    DSP_NodeType.Start => typeof(DSP_StartNode),
-                    DSP_NodeType.End => typeof(DSP_EndNode),
-                    DSP_NodeType.Dialogue => typeof(DSP_DialogueNode),
-                    DSP_NodeType.SceneEvent => typeof(DSP_SceneEventNode),
-                    _ => throw new Exception("Unknown node type")
-                };
-
-                Node node = (Node)Activator.CreateInstance(nodeType, nodeData.position, nodeData.values);
-                AddElement(node);
-            }
+                AddElement(CreateNodeInstance(nodeData));
 
             // restore edges
             foreach (DSP_EdgeData edgeData in graphAsset.GetAllEdges())
@@ -142,156 +144,44 @@ public class DSP_NodeGraphView : GraphView
             }
         });
     }
+    public Node CreateNodeInstance(DSP_NodeData data)
+    {
+        // handle Event and Condition nodes separately since they require special handling
+        if (data.nodeType == DSP_NodeType.StaticEvent)
+        {
+            DSP_StaticEventNode eventNode = new DSP_StaticEventNode(data.position, data.values, data.eventParameters);
+            return eventNode;
+        }
+        if (data.nodeType == DSP_NodeType.Condition)
+        {
+            DSP_ConditionNode conditionNode = new DSP_ConditionNode(data.position, data.values, data.eventParameters);
+            return conditionNode;
+        }
+        if (data.nodeType == DSP_NodeType.Choice)
+        {
+            DSP_ChoiceNode choiceNode = new DSP_ChoiceNode(data.position, data.values, data.eventParameters);
+            return choiceNode;
+        }
+
+        Type nodeType = data.nodeType switch
+        {
+            DSP_NodeType.Start => typeof(DSP_StartNode),
+            DSP_NodeType.End => typeof(DSP_EndNode),
+            DSP_NodeType.Dialogue => typeof(DSP_DialogueNode),
+            DSP_NodeType.SceneEvent => typeof(DSP_SceneEventNode),
+            _ => throw new Exception("Unknown node type")
+        };
+
+        Node node = (Node)Activator.CreateInstance(nodeType, data.position, data.values);
+        return node;
+    }
     public void SaveToAsset(DSP_ConversationGraphAsset graphAsset)
     {
         graphAsset.Clear();
 
         // save node data
         foreach (Node node in nodes)
-        {
-            if (node is DSP_StartNode)
-            {
-                graphAsset.AddNode(new DSP_NodeData
-                {
-                    id = nodes.ToList().FindIndex(n => n == node),
-                    nodeType = DSP_NodeType.Start,
-                    position = node.GetPosition().position,
-                    values = new SerializableValue[] { }
-                });
-            }
-            else if (node is DSP_EndNode endNode)
-            {
-                graphAsset.AddNode(new DSP_NodeData
-                {
-                    id = nodes.ToList().FindIndex(n => n == node),
-                    nodeType = DSP_NodeType.End,
-                    position = node.GetPosition().position,
-                    values = new SerializableValue[] { new(node.inputContainer.childCount) }
-                });
-            }
-            else if (node is DSP_DialogueNode dialogueNode)
-            {
-                graphAsset.AddNode(new DSP_NodeData
-                {
-                    id = nodes.ToList().FindIndex(n => n == node),
-                    nodeType = DSP_NodeType.Dialogue,
-                    position = node.GetPosition().position,
-                    values = new SerializableValue[]
-                    {
-                        new(dialogueNode.dialogueText),
-                        new(dialogueNode.characterAsset),
-                        new(dialogueNode.dialogueAudioClip)
-                    }
-                });
-            }
-            else if (node is DSP_ChoiceNode choiceNode)
-            {
-                string[] methodkeys = new string[choiceNode.choices.Count];
-                SerializableValue[] parameters = new SerializableValue[methodkeys.Length];
-                for (int i = 0; i < choiceNode.finalConditions.Count; i++)
-                {
-                    SerializableCondition condition = choiceNode.finalConditions[i];
-                    if (condition != null)
-                    {
-                        methodkeys[i] = condition.isStatic
-                            ? $"Static/{BuildSignature(condition)}"
-                            : $"{condition?.GetType().Name}/{BuildSignature(condition)}";
-
-                        parameters[i] = condition.parameter;
-                    }
-                }
-
-                graphAsset.AddNode(new DSP_NodeData
-                {
-                    id = nodes.ToList().FindIndex(n => n == node),
-                    nodeType = DSP_NodeType.Choice,
-                    position = node.GetPosition().position,
-                    values = new SerializableValue[]
-                    {
-                        new(choiceNode.choices.Select(c => c.Item1.value).ToArray()),
-                        new(choiceNode.conditionalStates.ToArray()),
-                        new(choiceNode.assignedObjects.ToArray()),
-                        new(methodkeys)
-                    },
-                    eventParameters = parameters,
-                    finalConditions = choiceNode.finalConditions.ToArray()
-                });
-            }
-            else if (node is DSP_StaticEventNode staticEventNode)
-            {
-                graphAsset.AddNode(new DSP_NodeData
-                {
-                    id = nodes.ToList().FindIndex(n => n == node),
-                    nodeType = DSP_NodeType.StaticEvent,
-                    position = node.GetPosition().position,
-                    values = new SerializableValue[]
-                    {
-                        new(staticEventNode.rowCount),
-                        // read directly from tracked references, not finalActions
-                        new(staticEventNode.assignedObjects.Select(o => o).ToArray()),
-                        new(staticEventNode.finalActions.Select(a =>
-                        {
-                            if (a == null) return null;
-                            if (a.isStatic)
-                            {
-                                Type t = Type.GetType(a.staticTypeName);
-                                MethodInfo m = t?.GetMethod(a.methodName, BindingFlags.Static | BindingFlags.Public);
-                                string sig = m != null ? BuildSignature(m) : $"{a.methodName}()";
-                                return $"Static/{sig}";
-                            }
-                            else
-                            {
-                                MethodInfo m = a.target?.GetType().GetMethod(a.methodName,
-                                    BindingFlags.Instance | BindingFlags.Public);
-                                string sig = m != null ? BuildSignature(m) : $"{a.methodName}()";
-                                return $"{a.target?.GetType().Name}/{sig}";
-                            }
-                        }).ToArray())
-                    },
-                    eventParameters = staticEventNode.parameters.Select(p => new SerializableValue(p)).ToArray(),
-                    finalEvents = staticEventNode.finalActions.ToArray()
-                });
-            }
-            else if (node is DSP_SceneEventNode sceneEventNode)
-            {
-                graphAsset.AddNode(new DSP_NodeData
-                {
-                    id = nodes.ToList().FindIndex(n => n == node),
-                    nodeType = DSP_NodeType.SceneEvent,
-                    position = node.GetPosition().position,
-                    values = new SerializableValue[]
-                    {
-                        new(sceneEventNode.eventAsset)
-                    }
-                });
-            }
-            else if (node is DSP_ConditionNode conditionNode)
-            {
-                string methodKey = null;
-                if (conditionNode.finalCondition != null)
-                {
-                    methodKey = conditionNode.finalCondition.isStatic
-                        ? $"Static/{BuildSignature(conditionNode.finalCondition)}"
-                        : $"{conditionNode.assignedObject?.GetType().Name}/{BuildSignature(conditionNode.finalCondition)}";
-                }
-
-                graphAsset.AddNode(new DSP_NodeData
-                {
-                    id = nodes.ToList().FindIndex(n => n == node),
-                    nodeType = DSP_NodeType.Condition,
-                    position = node.GetPosition().position,
-                    values = new SerializableValue[]
-                    {
-                        new(conditionNode.assignedObject),
-                        new(methodKey)
-                    },
-                    eventParameters = conditionNode.finalCondition?.parameter != null
-                        ? new SerializableValue[] { conditionNode.finalCondition.parameter }
-                        : null,
-                    finalConditions = new SerializableCondition[] { conditionNode.finalCondition }
-                });
-            }
-        }
+            graphAsset.AddNode(SaveNode(node));
 
         // save edge data
         foreach (Edge edge in edges)
@@ -315,6 +205,155 @@ public class DSP_NodeGraphView : GraphView
 
         EditorUtility.SetDirty(graphAsset);
         AssetDatabase.SaveAssets();
+    }
+    public DSP_NodeData SaveNode(Node node)
+    {
+        DSP_NodeData data = null;
+
+        if (node is DSP_StartNode)
+        {
+            data = new DSP_NodeData
+            {
+                id = nodes.ToList().FindIndex(n => n == node),
+                nodeType = DSP_NodeType.Start,
+                position = node.GetPosition().position,
+                values = new SerializableValue[] { }
+            };
+        }
+        else if (node is DSP_EndNode endNode)
+        {
+            data = new DSP_NodeData
+            {
+                id = nodes.ToList().FindIndex(n => n == node),
+                nodeType = DSP_NodeType.End,
+                position = node.GetPosition().position,
+                values = new SerializableValue[] { new(node.inputContainer.childCount) }
+            };
+        }
+        else if (node is DSP_DialogueNode dialogueNode)
+        {
+            data = new DSP_NodeData
+            {
+                id = nodes.ToList().FindIndex(n => n == node),
+                nodeType = DSP_NodeType.Dialogue,
+                position = node.GetPosition().position,
+                values = new SerializableValue[]
+                {
+                        new(dialogueNode.dialogueText),
+                        new(dialogueNode.characterAsset),
+                        new(dialogueNode.dialogueAudioClip)
+                }
+            };
+        }
+        else if (node is DSP_ChoiceNode choiceNode)
+        {
+            string[] methodkeys = new string[choiceNode.choices.Count];
+            SerializableValue[] parameters = new SerializableValue[methodkeys.Length];
+            for (int i = 0; i < choiceNode.finalConditions.Count; i++)
+            {
+                SerializableCondition condition = choiceNode.finalConditions[i];
+                if (condition != null)
+                {
+                    methodkeys[i] = condition.isStatic
+                        ? $"Static/{BuildSignature(condition)}"
+                        : $"{condition?.GetType().Name}/{BuildSignature(condition)}";
+
+                    parameters[i] = condition.parameter;
+                }
+            }
+
+            data = new DSP_NodeData
+            {
+                id = nodes.ToList().FindIndex(n => n == node),
+                nodeType = DSP_NodeType.Choice,
+                position = node.GetPosition().position,
+                values = new SerializableValue[]
+                {
+                        new(choiceNode.choices.Select(c => c.Item1.value).ToArray()),
+                        new(choiceNode.conditionalStates.ToArray()),
+                        new(choiceNode.assignedObjects.ToArray()),
+                        new(methodkeys)
+                },
+                eventParameters = parameters,
+                finalConditions = choiceNode.finalConditions.ToArray()
+            };
+        }
+        else if (node is DSP_StaticEventNode staticEventNode)
+        {
+            data = new DSP_NodeData
+            {
+                id = nodes.ToList().FindIndex(n => n == node),
+                nodeType = DSP_NodeType.StaticEvent,
+                position = node.GetPosition().position,
+                values = new SerializableValue[]
+                {
+                        new(staticEventNode.rowCount),
+                        // read directly from tracked references, not finalActions
+                        new(staticEventNode.assignedObjects.Select(o => o).ToArray()),
+                        new(staticEventNode.finalActions.Select(a =>
+                        {
+                            if (a == null) return null;
+                            if (a.isStatic)
+                            {
+                                Type t = Type.GetType(a.staticTypeName);
+                                MethodInfo m = t?.GetMethod(a.methodName, BindingFlags.Static | BindingFlags.Public);
+                                string sig = m != null ? BuildSignature(m) : $"{a.methodName}()";
+                                return $"Static/{sig}";
+                            }
+                            else
+                            {
+                                MethodInfo m = a.target?.GetType().GetMethod(a.methodName,
+                                    BindingFlags.Instance | BindingFlags.Public);
+                                string sig = m != null ? BuildSignature(m) : $"{a.methodName}()";
+                                return $"{a.target?.GetType().Name}/{sig}";
+                            }
+                        }).ToArray())
+                },
+                eventParameters = staticEventNode.parameters.Select(p => new SerializableValue(p)).ToArray(),
+                finalEvents = staticEventNode.finalActions.ToArray()
+            };
+        }
+        else if (node is DSP_SceneEventNode sceneEventNode)
+        {
+            data = new DSP_NodeData
+            {
+                id = nodes.ToList().FindIndex(n => n == node),
+                nodeType = DSP_NodeType.SceneEvent,
+                position = node.GetPosition().position,
+                values = new SerializableValue[]
+                {
+                        new(sceneEventNode.eventAsset)
+                }
+            };
+        }
+        else if (node is DSP_ConditionNode conditionNode)
+        {
+            string methodKey = null;
+            if (conditionNode.finalCondition != null)
+            {
+                methodKey = conditionNode.finalCondition.isStatic
+                    ? $"Static/{BuildSignature(conditionNode.finalCondition)}"
+                    : $"{conditionNode.assignedObject?.GetType().Name}/{BuildSignature(conditionNode.finalCondition)}";
+            }
+
+            data = new DSP_NodeData
+            {
+                id = nodes.ToList().FindIndex(n => n == node),
+                nodeType = DSP_NodeType.Condition,
+                position = node.GetPosition().position,
+                values = new SerializableValue[]
+                {
+                        new(conditionNode.assignedObject),
+                        new(methodKey)
+                },
+                eventParameters = conditionNode.finalCondition?.parameter != null
+                    ? new SerializableValue[] { conditionNode.finalCondition.parameter }
+                    : null,
+                finalConditions = new SerializableCondition[] { conditionNode.finalCondition }
+            };
+        }
+
+        return data;
     }
     string BuildSignature(MethodInfo method)
     {
@@ -708,7 +747,7 @@ public class DSP_ChoiceNode : Node
                 bool conditionalState = conditionalStates != null ? conditionalStates[i] : false;
                 Object savedObject = savedObjects != null ? savedObjects[i] : null;
                 string savedMethod = savedMethods != null ? savedMethods[i] : null;
-                object savedParam = savedParams != null ? savedParams[i].GetValue() : null;
+                object savedParam = savedParams != null ? savedParams[i]?.GetValue() : null;
 
                 AddChoice(choiceContainer, choiceText, conditionalState, savedObject, savedMethod, savedParam);
             }
