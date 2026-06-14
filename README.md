@@ -1,4 +1,4 @@
-# Unity Dialogue System
+# Dialogue System Pro
 A graph based dialogue tool for Unity
 
 ## Features
