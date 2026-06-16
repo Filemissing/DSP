@@ -33,6 +33,8 @@ public class DSP_EventHandlerEditor : UnityEditor.Editor
 {
     public override void OnInspectorGUI()
     {
+        serializedObject.Update();
+
         DSP_EventHandler myTarget = target as DSP_EventHandler;
 
         for (int i = 0; i < myTarget.eventObjects.Count; i++)
@@ -67,5 +69,7 @@ public class DSP_EventHandlerEditor : UnityEditor.Editor
         }
 
         EditorGUILayout.EndHorizontal();
+
+        serializedObject.ApplyModifiedProperties();
     }
 }

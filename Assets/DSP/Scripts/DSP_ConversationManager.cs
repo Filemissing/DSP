@@ -36,7 +36,7 @@ public class DSP_ConversationManager : MonoBehaviour
     public event Action OnConversationEnded;
     public event DialogueEventHandler OnDialogueNode;
     public event ChoiceEventHandler OnChoiceNode;
-    public event Action OnEventNode;
+    //public event Action OnEventNode;
     public event Action<DSP_ConversationGraphAsset> OnPassiveDialogueTriggered;
     
     public bool IsConversationActive { get; private set; }
