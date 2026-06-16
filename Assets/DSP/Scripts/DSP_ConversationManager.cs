@@ -36,7 +36,7 @@ public class DSP_ConversationManager : MonoBehaviour
     public event Action OnConversationEnded;
     public event DialogueEventHandler OnDialogueNode;
     public event ChoiceEventHandler OnChoiceNode;
-    public event Action OnEventNode;
+    //public event Action OnEventNode;
     
     public bool IsConversationActive { get; private set; }
     public bool IsAtChoiceNode { get; private set; }
@@ -203,10 +203,5 @@ public class DSP_ConversationManager : MonoBehaviour
         waitingForUserInput = false;
         
         OnConversationEnded?.Invoke();
-    }
-    
-    public static DSP_ConversationManager GetInstance()
-    {
-        return FindObjectOfType<DSP_ConversationManager>();
     }
 }
