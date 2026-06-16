@@ -1,0 +1,90 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class DSP_PassiveDialogueVisualizer : MonoBehaviour
+{
+    [Header("References")]
+    [SerializeField] private DSP_PassiveDialogueEntry entry;
+
+    private List<DSP_PassiveDialogueEntry> currentEntries = new List<DSP_PassiveDialogueEntry>();
+
+
+
+    // Functions
+    public void PlayDialogue(DSP_ConversationGraphAsset graph)
+    {
+        if (!graph) return;
+        
+        DSP_NodeData node = GetFirstDialogueNode(graph);
+        if (node == null) return;
+        
+        CreateEntry(GetDialogue(node), GetCharacterName(node));
+    }
+
+    
+    
+    // Helpers
+    DSP_NodeData GetFirstDialogueNode(DSP_ConversationGraphAsset graph)
+    {
+        var nodes = graph.GetNodes();
+        if (nodes.Count == 0) return null;
+
+        foreach (var node in nodes)
+        {
+            if (node.nodeType == DSP_NodeType.Dialogue) return node;
+        }
+        
+        return null;
+    }
+
+    string GetDialogue(DSP_NodeData node)
+    {
+        return node.values.Length > 0 ? node.values[0].GetValue() as string : "";
+    }
+
+    string GetCharacterName(DSP_NodeData node)
+    {
+        if (node.values.Length > 1 && node.values[1].GetValue() is DSP_CharacterAsset c) return c.characterName;
+        return "";
+    }
+
+    void CreateEntry(string dialogue, string character)
+    {
+        DSP_PassiveDialogueEntry newEntry = Instantiate(entry, transform);
+        newEntry.Setup(dialogue, character);
+        
+        currentEntries.Add(newEntry);
+
+        float lifetime = CalculateLifetime(dialogue);
+
+        StartCoroutine(KillAfterTime(newEntry, lifetime));
+    }
+    
+    IEnumerator KillAfterTime(DSP_PassiveDialogueEntry entry, float lifetime)
+    {
+        yield return new WaitForSeconds(lifetime);
+        
+        currentEntries.Remove(entry);
+        
+        entry?.Kill();
+    }
+
+    float CalculateLifetime(string dialogue)
+    {
+        return 3 + (dialogue.Length * .03f);
+    }
+    
+    
+    
+    // Event Bindings
+    void OnEnable()
+    {
+        DSP_ConversationManager.instance.OnPassiveDialogueTriggered += PlayDialogue;
+    }
+
+    void OnDisable()
+    {
+        DSP_ConversationManager.instance.OnPassiveDialogueTriggered -= PlayDialogue;
+    }
+}

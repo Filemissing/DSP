@@ -47,7 +47,7 @@ public class DSP_DialogueBoxVisualizer : MonoBehaviour
     
     void Start()
     {
-        conversationManager = DSP_ConversationManager.GetInstance();
+        conversationManager = DSP_ConversationManager.instance;
         if (conversationManager != null)
         {
             settings = conversationManager.settings;

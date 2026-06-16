@@ -21,7 +21,7 @@ public class DSP_DialogueOptionsVisualizer : MonoBehaviour
     // Methods
     void Awake()
     {
-        conversationManager = DSP_ConversationManager.GetInstance();
+        conversationManager = DSP_ConversationManager.instance;
         ClearOptions();
     }
     
