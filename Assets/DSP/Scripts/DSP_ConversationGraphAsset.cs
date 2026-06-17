@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine;
 using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
 [CreateAssetMenu(fileName = "NewDialogueGraph", menuName = "DSP/Dialogue Graph")]
 public class DSP_ConversationGraphAsset : ScriptableObject, ISerializationCallbackReceiver
@@ -194,18 +195,31 @@ public class DSP_ConversationIterator
 
                 case DSP_NodeType.Condition:
                     bool result = node.finalConditions[0].Invoke();
-                    var conditionEdges = _graph.GetOutgoingEdges(node);
-                    var branch = conditionEdges.FirstOrDefault(e => e.outPortID == (result ? 0 : 1));
+                    List<DSP_EdgeData> conditionEdges = _graph.GetOutgoingEdges(node);
+                    DSP_EdgeData branch = conditionEdges.FirstOrDefault(e => e.outPortID == (result ? 0 : 1));
                     node = branch != null ? _graph.GetNodes().FirstOrDefault(n => n.id == branch.toNode) : null;
                     break;
 
-                case DSP_NodeType.Dialogue:
-                    State = DSP_IteratorState.WaitingForUI;
-                    return; // Pause here
+                case DSP_NodeType.Random:
+                    List<int> pool = new List<int>();
+                    int[] weights = node.values[0].GetValue() as int[];
 
+                    for (int i = 0; i < weights.Length; i++)
+                    {
+                        pool.Add(i);
+                    }
+
+                    int index = pool[Random.Range(0, pool.Count)];
+
+                    List<DSP_EdgeData> edges = _graph.GetOutgoingEdges(node);
+                    DSP_EdgeData chosenEdge = edges.FirstOrDefault(e => e.outPortID == index);
+                    node = chosenEdge != null ? _graph.GetNodes().FirstOrDefault(n => n.id == chosenEdge.toNode) : null;
+                    break;
+
+                case DSP_NodeType.Dialogue:
                 case DSP_NodeType.Choice:
                     State = DSP_IteratorState.WaitingForUI;
-                    return;
+                    return; // Pause here
             }
         }
 
