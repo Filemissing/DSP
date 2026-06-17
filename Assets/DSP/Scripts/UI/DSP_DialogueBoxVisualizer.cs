@@ -40,6 +40,9 @@ public class DSP_DialogueBoxVisualizer : MonoBehaviour
     private string currentCharacterName;
     private Sprite currentCharacterSprite;
     
+    [Header("Data")]
+    public bool isTyping = false;
+    
     // Events
     public event Action<IEnumerable<GameObject>, EffectType> PlayEffect;
     
