@@ -11,7 +11,8 @@ public enum DSP_NodeType
     Choice,
     StaticEvent,
     SceneEvent,
-    Condition
+    Condition,
+    Random
 }
 
 [System.Serializable] public class DSP_NodeData
