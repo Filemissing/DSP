@@ -38,6 +38,7 @@ public class DSP_ConversationManager : MonoBehaviour
     public event ChoiceEventHandler OnChoiceNode;
     //public event Action OnEventNode;
     public event Action<DSP_ConversationGraphAsset> OnPassiveDialogueTriggered;
+    public event Action<DSP_CharacterAsset, string> OnPassiveDialogueTriggeredString;
     
     public bool IsConversationActive { get; private set; }
     public bool IsAtChoiceNode { get; private set; }
@@ -209,5 +210,10 @@ public class DSP_ConversationManager : MonoBehaviour
     public void PlayPassiveDialogue(DSP_ConversationGraphAsset graph)
     {
         OnPassiveDialogueTriggered?.Invoke(graph);
+    }
+    
+    public void PlayPassiveDialogue(DSP_CharacterAsset characterAsset, string dialogue)
+    {
+        OnPassiveDialogueTriggeredString?.Invoke(characterAsset, dialogue);
     }
 }

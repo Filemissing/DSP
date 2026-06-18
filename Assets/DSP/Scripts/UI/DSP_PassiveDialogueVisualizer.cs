@@ -21,6 +21,13 @@ public class DSP_PassiveDialogueVisualizer : MonoBehaviour
         
         CreateEntry(GetDialogue(node), GetCharacterName(node));
     }
+    
+    public void PlayDialogue(DSP_CharacterAsset character, string dialogue)
+    {
+        if (!character) return;
+        
+        CreateEntry(dialogue, character.name);
+    }
 
     
     
@@ -81,10 +88,12 @@ public class DSP_PassiveDialogueVisualizer : MonoBehaviour
     void OnEnable()
     {
         DSP_ConversationManager.instance.OnPassiveDialogueTriggered += PlayDialogue;
+        DSP_ConversationManager.instance.OnPassiveDialogueTriggeredString += PlayDialogue;
     }
 
     void OnDisable()
     {
         DSP_ConversationManager.instance.OnPassiveDialogueTriggered -= PlayDialogue;
+        DSP_ConversationManager.instance.OnPassiveDialogueTriggeredString -= PlayDialogue;
     }
 }
