@@ -1,6 +1,10 @@
 using UnityEngine;
 
-public class DSP_UIManager : MonoBehaviour
+namespace DSP
 {
-    [SerializeField] DSP_SettingsObject settings;
+	public class DSP_UIManager : MonoBehaviour
+	{
+		[SerializeField] DSP_SettingsObject settings;
+	}
+
 }

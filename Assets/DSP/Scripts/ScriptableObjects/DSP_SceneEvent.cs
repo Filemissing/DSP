@@ -2,35 +2,39 @@ using System;
 using System.Linq;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "DSP_SceneEvent", menuName = "DSP/Scene Event")]
-public class DSP_SceneEvent : ScriptableObject
+namespace DSP
 {
-    private event Func<bool> _event;
-
-    public void Subscribe(Func<bool> callback)
+    [CreateAssetMenu(fileName = "DSP_SceneEvent", menuName = "DSP/Scene Event")]
+    public class DSP_SceneEvent : ScriptableObject
     {
-        _event += callback;
-    }
+        private event Func<bool> _event;
 
-    public void Unsubscribe(Func<bool> callback)
-    {
-        _event -= callback;
-    }
-
-    public void Raise()
-    {
-        if (_event != null)
+        public void Subscribe(Func<bool> callback)
         {
-            bool result = _event.GetInvocationList().Cast<Func<bool>>().Any(callback => callback());
+            _event += callback;
+        }
 
-            if (!result)
+        public void Unsubscribe(Func<bool> callback)
+        {
+            _event -= callback;
+        }
+
+        public void Raise()
+        {
+            if (_event != null)
             {
-                Debug.LogWarning($"Event {name} was raised but no subscribers returned successfully");
+                bool result = _event.GetInvocationList().Cast<Func<bool>>().Any(callback => callback());
+
+                if (!result)
+                {
+                    Debug.LogWarning($"Event {name} was raised but no subscribers returned successfully");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"Event {name} was raised but has no subscribers");
             }
         }
-        else
-        {
-            Debug.LogWarning($"Event {name} was raised but has no subscribers");
-        }
     }
+
 }
