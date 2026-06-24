@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
@@ -8,12 +7,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static UnityEditor.Experimental.GraphView.Port;
-using Button = UnityEngine.UIElements.Button;
-using Edge = UnityEditor.Experimental.GraphView.Edge;
-using Image = UnityEngine.UIElements.Image;
 using Object = UnityEngine.Object;
-using Toggle = UnityEngine.UIElements.Toggle;
 
 namespace DSP
 {
@@ -42,62 +36,63 @@ namespace DSP
             graphView = new DSP_NodeGraphView() { name = "Node Graph" };
 
             // set up ToolBar
-            toolbar = new Toolbar();
+            {
+                toolbar = new Toolbar();
 
-            // save button
-            ToolbarButton saveButton = new ToolbarButton(() => graphView.SaveToAsset(dialogueGraphAsset));
-            saveButton.iconImage = Background.FromTexture2D(EditorGUIUtility.IconContent("SaveActive").image as Texture2D);
-            saveButton.tooltip = "Save";
+                // save button
+                ToolbarButton saveButton = new ToolbarButton(() => graphView.SaveToAsset(dialogueGraphAsset));
+                saveButton.iconImage = Background.FromTexture2D(EditorGUIUtility.IconContent("SaveActive").image as Texture2D);
+                saveButton.tooltip = "Save";
 
-            // add elements in correct order
-            toolbar.Add(saveButton);
-            rootVisualElement.Add(toolbar);
-            rootVisualElement.Add(graphView);
+                toolbar.Add(saveButton);
+                rootVisualElement.Add(toolbar);
+                rootVisualElement.Add(graphView); 
+            }
 
             // setup callbacks
-            graphView.graphViewChanged = OnGraphViewChanged;
-
-            Undo.undoRedoPerformed += OnUndoRedo;
-
-            rootVisualElement.RegisterCallback<KeyDownEvent>(evt =>
             {
-                if ((evt.modifiers & EventModifiers.Control) != 0)
+                graphView.graphViewChanged = OnGraphViewChanged;
+
+                Undo.undoRedoPerformed += OnUndoRedo;
+
+                rootVisualElement.RegisterCallback<KeyDownEvent>(evt =>
                 {
-                    switch (evt.keyCode)
+                    if ((evt.modifiers & EventModifiers.Control) != 0)
                     {
-                        case KeyCode.S:
-                            graphView.SaveToAsset(dialogueGraphAsset);
+                        switch (evt.keyCode)
+                        {
+                            case KeyCode.S:
+                                graphView.SaveToAsset(dialogueGraphAsset);
 
-                            evt.StopPropagation();
-                            break;
+                                evt.StopPropagation();
+                                break;
 
-                        case KeyCode.C:
-                            Copy();
-                            evt.StopPropagation();
-                            break;
+                            case KeyCode.C:
+                                Copy();
+                                evt.StopPropagation();
+                                break;
 
-                        case KeyCode.V:
-                            Paste();
-                            evt.StopPropagation();
-                            break;
+                            case KeyCode.V:
+                                Paste();
+                                evt.StopPropagation();
+                                break;
 
-                        case KeyCode.X:
-                            Copy();
-                            foreach (Node node in graphView.selection.OfType<Node>().ToList())
-                                node.parent.Remove(node);
-                            evt.StopPropagation();
-                            break;
+                            case KeyCode.X:
+                                Copy();
+                                foreach (Node node in graphView.selection.OfType<Node>().ToList())
+                                    node.parent.Remove(node);
+                                evt.StopPropagation();
+                                break;
 
-                        case KeyCode.D:
-                            Copy();
-                            Paste();
-                            evt.StopPropagation();
-                            break;
+                            case KeyCode.D:
+                                Copy();
+                                Paste();
+                                evt.StopPropagation();
+                                break;
+                        }
                     }
-                }
-            });
-
-
+                }); 
+            }
         }
         GraphViewChange OnGraphViewChanged(GraphViewChange change)
         {
@@ -144,12 +139,20 @@ namespace DSP
             RecordChange("Paste");
             graphView.SaveToAsset(dialogueGraphAsset);
         }
+
+        private void OnProjectChange()
+        {
+            if (dialogueGraphAsset == null)
+            {
+                graphView.Clear();
+                dialogueGraphAsset = null;
+                this.Close();
+            }
+        }
     }
 
     public class DSP_NodeGraphView : GraphView
     {
-        private bool isUpdating;
-
         public DSP_NodeGraphView()
         {
             style.flexGrow = 1;
@@ -172,7 +175,7 @@ namespace DSP
 
             schedule.Execute(() =>
             {
-                // if this is a new/empty asset (e.g. start and end nodes aren't accounted for)
+                // if this is a new asset (e.g. start and end nodes aren't present)
                 if (graphAsset.GetNodeCount() < 2)
                 {
                     AddElement(new DSP_StartNode(contentViewContainer.contentRect.center + new Vector2(-200, 300)));
@@ -199,7 +202,7 @@ namespace DSP
         }
         public Node CreateNodeInstance(DSP_NodeData data)
         {
-            // handle Event and Condition nodes separately since they require special handling
+            // These nodes require special handling since they need the eventParameters list
             if (data.nodeType == DSP_NodeType.StaticEvent)
             {
                 DSP_StaticEventNode eventNode = new DSP_StaticEventNode(data.position, data.values, data.eventParameters);
@@ -231,6 +234,9 @@ namespace DSP
         }
         public void SaveToAsset(DSP_ConversationGraphAsset graphAsset)
         {
+            if (graphAsset == null)
+                return;
+
             graphAsset.Clear();
 
             // save node data
@@ -263,6 +269,8 @@ namespace DSP
         public DSP_NodeData SaveNode(Node node)
         {
             DSP_NodeData data = null;
+
+            // make this a method in Node in the future
 
             if (node is DSP_StartNode)
             {
@@ -444,7 +452,7 @@ namespace DSP
 
         public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
         {
-            evt.StopPropagation(); // prevent the default empty dropdown menu from also appearing
+            evt.StopPropagation(); // prevent the default dropdown menu from appearing
 
             Vector2 mousePos = this.ChangeCoordinatesTo(contentViewContainer, evt.localMousePosition);
 
@@ -454,6 +462,8 @@ namespace DSP
         }
         public void PopulateNodeCreationMenu(GenericMenu menu, Vector2 pos, Port port = null, Direction dir = default)
         {
+            // populate with reflection in the future
+
             menu.AddItem(new GUIContent("Dialogue Node"), false, () => CreateNode(() => new DSP_DialogueNode(pos), port, dir));
             menu.AddItem(new GUIContent("Choice Node"), false, () => CreateNode(() => new DSP_ChoiceNode(pos), port, dir));
             menu.AddItem(new GUIContent("Static Event Node"), false, () => CreateNode(() => new DSP_StaticEventNode(pos), port, dir));
@@ -504,25 +514,6 @@ namespace DSP
             };
         }
 
-        public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
-        {
-            var compatiblePorts = new List<Port>();
-
-            ports.ForEach((port) =>
-            {
-                bool isNotSamePort = port != startPort;
-                bool isNotSameNode = port.node != startPort.node;
-                bool isOppositeDirection = port.direction != startPort.direction;
-
-                if (isNotSamePort && isNotSameNode && isOppositeDirection)
-                {
-                    compatiblePorts.Add(port);
-                }
-            });
-
-            return compatiblePorts;
-        }
-
         private void OnEditorUpdate()
         {
             foreach (var element in nodes)
@@ -533,15 +524,12 @@ namespace DSP
                 }
             }
         }
-
-        private void OnDisable()
-        {
-            EditorApplication.update -= OnEditorUpdate;
-        }
     }
 
     public class DSP_EdgeConnectorListener : IEdgeConnectorListener
     {
+        // Clone of the default EdgeConnectorListener with added logic for OnDropOutsidePort
+
         private readonly DSP_NodeGraphView graphView;
 
         private GraphViewChange m_GraphViewChange;
@@ -561,7 +549,7 @@ namespace DSP
             m_EdgesToCreate.Clear();
             m_EdgesToCreate.Add(edge);
             m_EdgesToDelete.Clear();
-            if (edge.input.capacity == Capacity.Single)
+            if (edge.input.capacity == Port.Capacity.Single)
             {
                 foreach (Edge connection in edge.input.connections)
                 {
@@ -572,7 +560,7 @@ namespace DSP
                 }
             }
 
-            if (edge.output.capacity == Capacity.Single)
+            if (edge.output.capacity == Port.Capacity.Single)
             {
                 foreach (Edge connection2 in edge.output.connections)
                 {
@@ -619,12 +607,12 @@ namespace DSP
     {
         public static Port GeneratePort(this Node node, Direction direction, Port.Capacity capacity = Port.Capacity.Single, string portName = "", System.Type type = null)
         {
-            type ??= typeof(float);
+            type ??= typeof(float); // default type float
 
             var port = node.InstantiatePort(Orientation.Horizontal, direction, capacity, type);
             port.portName = portName;
 
-            // Replace default edge connector with custom listener
+            // Replace default edge connector with custom one
             port.RemoveManipulator(port.edgeConnector);
             port.AddManipulator(new EdgeConnector<Edge>(new DSP_EdgeConnectorListener(DSP_EditorWindow.graphView)));
 
@@ -681,7 +669,7 @@ namespace DSP
 
             this.AddOutputPort();
 
-            capabilities &= ~Capabilities.Deletable;
+            capabilities &= ~Capabilities.Deletable; // this node cannot be deleted
 
             RefreshExpandedState();
             RefreshPorts();
@@ -694,6 +682,8 @@ namespace DSP
         {
             title = "End";
             this.FixTransparency();
+
+            // multiple output ports don't matter right now but were added to be able to link different conversations later
 
             if (values != null && values.Length > 0)
             {
@@ -723,7 +713,7 @@ namespace DSP
 
             mainContainer.Add(buttonContainer);
 
-            capabilities &= ~Capabilities.Deletable;
+            capabilities &= ~Capabilities.Deletable; // this node cannot be deleted
 
             RefreshExpandedState();
             RefreshPorts();
@@ -1352,8 +1342,8 @@ namespace DSP
     public class DSP_StaticEventNode : Node
     {
         // Per-row data needed to resolve the dropdown selection back to a MethodInfo
-        // Key: "GroupName/MethodSignature" string → (MethodInfo, instance target or null if static)
-        private List<Dictionary<string, (MethodInfo method, Object target)>> _rowMethodMaps = new();
+        // string "GroupName/MethodSignature" -> (MethodInfo, instance target or null if static)
+        private List<Dictionary<string, (MethodInfo method, Object target)>> rowMethodMaps = new();
 
         public List<SerializableEvent> finalActions = new();
         public List<Object> assignedObjects = new();
@@ -1409,7 +1399,7 @@ namespace DSP
         void AddEventRow(VisualElement container, Object assignedObject = null, string chosenMethod = null, object parameter = null)
         {
             int index = rowCount;
-            _rowMethodMaps.Add(new Dictionary<string, (MethodInfo, Object)>());
+            rowMethodMaps.Add(new Dictionary<string, (MethodInfo, Object)>());
 
             VisualElement lines = new VisualElement();
             lines.style.flexDirection = FlexDirection.Column;
@@ -1469,7 +1459,7 @@ namespace DSP
             if (rowCount <= 1) return;
 
             container.RemoveAt(container.childCount - 1);
-            _rowMethodMaps.RemoveAt(rowCount - 1);
+            rowMethodMaps.RemoveAt(rowCount - 1);
             if (assignedObjects.Count >= rowCount) assignedObjects.RemoveAt(rowCount - 1);
             if (finalActions.Count >= rowCount) finalActions.RemoveAt(rowCount - 1);
             if (parameters.Count >= rowCount) parameters.RemoveAt(rowCount - 1);
@@ -1482,7 +1472,7 @@ namespace DSP
             menu.choices.Clear();
             menu.choices.Add("No Function");
             menu.value = "No Function";  // reset selection
-            _rowMethodMaps[index].Clear();
+            rowMethodMaps[index].Clear();
 
             if (obj == null) return;
 
@@ -1517,7 +1507,7 @@ namespace DSP
 
                     string key = $"{type.Name}/{BuildSignature(method)}";
                     menu.choices.Add(key);
-                    _rowMethodMaps[index][key] = (method, instanceTarget);
+                    rowMethodMaps[index][key] = (method, instanceTarget);
                 }
             }
 
@@ -1530,7 +1520,7 @@ namespace DSP
 
                 string key = $"Static/{BuildSignature(method)}";
                 menu.choices.Add(key);
-                _rowMethodMaps[index][key] = (method, null); // null target = static
+                rowMethodMaps[index][key] = (method, null); // null target = static
             }
         }
 
@@ -1540,14 +1530,14 @@ namespace DSP
             var oldRow = lines.Children().FirstOrDefault(c => c.name == $"ParamRow_{index}");
             if (oldRow != null) lines.Remove(oldRow);
 
-            if (optionName == "No Function" || !_rowMethodMaps[index].ContainsKey(optionName))
+            if (optionName == "No Function" || !rowMethodMaps[index].ContainsKey(optionName))
             {
                 while (finalActions.Count <= index) finalActions.Add(null);
                 finalActions[index] = null;
                 return;
             }
 
-            var (method, instanceTarget) = _rowMethodMaps[index][optionName];
+            var (method, instanceTarget) = rowMethodMaps[index][optionName];
             bool isStatic = instanceTarget == null;
 
             // Extend lists

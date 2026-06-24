@@ -24,9 +24,9 @@ namespace DSP
         public Vector2 position;
         public SerializableValue[] values;
 
-        public SerializableValue[] eventParameters; // only for Event and Condition nodes
-        public SerializableEvent[] finalEvents; // only for Event nodes
-        public SerializableCondition[] finalConditions; // for Condition and Choice nodes
+        public SerializableValue[] eventParameters; // for Event and Condition nodes
+        public SerializableEvent[] finalEvents; // for Event nodes
+        public SerializableCondition[] finalConditions; // Condition and Choice nodes
     }
     [System.Serializable] public class DSP_EdgeData
     {
@@ -139,9 +139,9 @@ namespace DSP
     }
     [System.Serializable] public class SerializableEvent
     {
-        public Object target;        // null when static
+        public Object target; // null when static
         public string methodName;
-        public string staticTypeName; // AssemblyQualifiedName, only used when isStatic
+        public string staticTypeName; // assembly qualified name, only used when isStatic
         public bool isStatic;
         public SerializableValue parameter;
 
