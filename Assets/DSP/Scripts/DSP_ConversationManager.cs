@@ -15,7 +15,6 @@ namespace DSP
             else
             {
                 instance = this;
-                DontDestroyOnLoad(gameObject);
             }
         }
 
