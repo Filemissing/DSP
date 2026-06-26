@@ -209,6 +209,7 @@ MonoBehaviour:
   characterImageTarget: {fileID: 6505719371612430832}
   characterNameBoxTarget: {fileID: 8983651158510193012}
   dialogueTextTarget: {fileID: 8337479726084460685}
+  isTyping: 0
 --- !u!222 &117114667579239300
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -660,7 +661,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 25, y: 15}
-  m_SizeDelta: {x: 160, y: 50}
+  m_SizeDelta: {x: 220, y: 50}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &7916715975401881248
 CanvasRenderer:

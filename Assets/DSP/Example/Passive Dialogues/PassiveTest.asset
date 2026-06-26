@@ -27,7 +27,7 @@ MonoBehaviour:
     - type: 3
       intValue: 0
       floatValue: 0
-      stringValue: Did you know that 9 + 10 might actually be 21?
+      stringValue: Hey, back off man, 1.5 meters apart.
       boolValue: 0
       objectValue: {fileID: 0}
       intArray: 
@@ -62,50 +62,10 @@ MonoBehaviour:
     finalConditions: []
   - id: 2
     nodeType: 1
-    position: {x: 1468, y: 368.80002}
+    position: {x: 1067.2, y: 368.80002}
     values:
     - type: 1
       intValue: 1
-      floatValue: 0
-      stringValue: 
-      boolValue: 0
-      objectValue: {fileID: 0}
-      intArray: 
-      floatArray: []
-      stringArray: []
-      boolArray: 
-      objectArray: []
-    eventParameters: []
-    finalEvents: []
-    finalConditions: []
-  - id: 3
-    nodeType: 2
-    position: {x: 1063.2, y: 368.80002}
-    values:
-    - type: 3
-      intValue: 0
-      floatValue: 0
-      stringValue: Yeah ikr thats so cool.
-      boolValue: 0
-      objectValue: {fileID: 0}
-      intArray: 
-      floatArray: []
-      stringArray: []
-      boolArray: 
-      objectArray: []
-    - type: 5
-      intValue: 0
-      floatValue: 0
-      stringValue: 
-      boolValue: 0
-      objectValue: {fileID: 11400000, guid: 92578d1debabeca4e87ac875ce29c8db, type: 2}
-      intArray: 
-      floatArray: []
-      stringArray: []
-      boolArray: 
-      objectArray: []
-    - type: 0
-      intValue: 0
       floatValue: 0
       stringValue: 
       boolValue: 0
@@ -124,10 +84,6 @@ MonoBehaviour:
     toNode: 1
     inPortID: 0
   - fromNode: 1
-    outPortID: 0
-    toNode: 3
-    inPortID: 0
-  - fromNode: 3
     outPortID: 0
     toNode: 2
     inPortID: 0

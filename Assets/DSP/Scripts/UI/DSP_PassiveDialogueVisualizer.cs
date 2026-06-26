@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 
 namespace DSP
@@ -8,6 +9,7 @@ namespace DSP
     {
         [Header("References")]
         [SerializeField] private DSP_PassiveDialogueEntry entry;
+        [SerializeField] private CanvasGroup canvasGroup;
 
         private List<DSP_PassiveDialogueEntry> currentEntries = new List<DSP_PassiveDialogueEntry>();
 
@@ -84,6 +86,16 @@ namespace DSP
             return 3 + (dialogue.Length * .03f);
         }
 
+        void Hide()
+        {
+            canvasGroup.DOFade(0, .2f).SetEase(Ease.OutCubic);
+        }
+
+        void Unhide()
+        {
+            canvasGroup.DOFade(1, .2f).SetEase(Ease.OutCubic);
+        }
+
 
 
         // Event Bindings
@@ -91,12 +103,18 @@ namespace DSP
         {
             DSP_ConversationManager.instance.OnPassiveDialogueTriggered += PlayDialogue;
             DSP_ConversationManager.instance.OnPassiveDialogueTriggeredString += PlayDialogue;
+
+            DSP_ConversationManager.instance.OnConversationStarted += Hide;
+            DSP_ConversationManager.instance.OnConversationEnded += Unhide;
         }
 
         void OnDisable()
         {
             DSP_ConversationManager.instance.OnPassiveDialogueTriggered -= PlayDialogue;
             DSP_ConversationManager.instance.OnPassiveDialogueTriggeredString -= PlayDialogue;
+            
+            DSP_ConversationManager.instance.OnConversationStarted -= Hide;
+            DSP_ConversationManager.instance.OnConversationEnded -= Unhide;
         }
     } 
 }

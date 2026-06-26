@@ -869,12 +869,12 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 577804187}
-        m_TargetAssemblyTypeName: DSP_ConversationManager, Assembly-CSharp
+        m_TargetAssemblyTypeName: DSP.DSP_ConversationManager, Assembly-CSharp
         m_MethodName: PlayPassiveDialogue
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 11400000, guid: 2537eebbf6f01794c81da95a8d8f7c9a, type: 2}
-          m_ObjectArgumentAssemblyTypeName: DSP_ConversationGraphAsset, Assembly-CSharp
+          m_ObjectArgumentAssemblyTypeName: DSP.DSP_ConversationGraphAsset, Assembly-CSharp
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 

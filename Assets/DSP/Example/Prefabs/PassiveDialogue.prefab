@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2982528599773430765}
   - component: {fileID: 2555595579875772128}
   - component: {fileID: 4751171909727244630}
+  - component: {fileID: 2885206735804728815}
   m_Layer: 5
   m_Name: PassiveDialogue
   m_TagString: Untagged
@@ -76,3 +77,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   entry: {fileID: 3194927367678879374, guid: a7a24149bb06a5e42a9025ce291e0c1c, type: 3}
+  canvasGroup: {fileID: 2885206735804728815}
+--- !u!225 &2885206735804728815
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 538084848802762546}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 0
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 0

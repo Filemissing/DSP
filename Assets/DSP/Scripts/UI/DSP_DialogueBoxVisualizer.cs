@@ -13,6 +13,7 @@ namespace DSP
         {
             AppearDialogueBox,
             DisappearDialogueBox,
+            ForceDisappearDialogueBox,
             AppearContinueButton,
             DisappearContinueButton,
             AppearOptions,
@@ -62,7 +63,7 @@ namespace DSP
             }
 
             PlayEffect?.Invoke(new[] { continueButton.gameObject }, EffectType.DisappearContinueButton);
-            PlayEffect?.Invoke(new[] { dialogueBoxTarget }, EffectType.DisappearDialogueBox);
+            PlayEffect?.Invoke(new[] { dialogueBoxTarget }, EffectType.ForceDisappearDialogueBox);
 
             ApplySettings();
         }

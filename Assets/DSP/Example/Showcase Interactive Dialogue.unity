@@ -561,6 +561,14 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 577804185}
+    - target: {fileID: 5205311900403806945, guid: 27cd756447cac8f44baf127b362cea06, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: DSP.DSP_ConversationManager, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 5205311900403806945, guid: 27cd756447cac8f44baf127b362cea06, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: DSP.DSP_ConversationGraphAsset, Assembly-CSharp
+      objectReference: {fileID: 0}
     - target: {fileID: 7979404069343488922, guid: 27cd756447cac8f44baf127b362cea06, type: 3}
       propertyPath: m_Pivot.x
       value: 0

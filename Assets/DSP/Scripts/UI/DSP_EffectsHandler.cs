@@ -45,6 +45,20 @@ namespace DSP
             obj.transform.DOScale(Vector3.one * .4f, 0.15f).SetEase(Ease.OutBack);
         }
 
+        public void ForceDisappearDialogueBox(GameObject obj)
+        {
+            // References
+            CanvasGroup canvasGroup = obj.GetComponent<CanvasGroup>();
+
+            // Transparency
+            canvasGroup.interactable = false;
+            canvasGroup.blocksRaycasts = false;
+            canvasGroup.alpha = 0;
+
+            // Scale
+            obj.transform.localScale = Vector3.one * .4f;
+        }
+
         // Continue Button Effects
         public void AppearContinueButton(GameObject obj)
         {
@@ -53,8 +67,12 @@ namespace DSP
 
             // Hide
             canvasGroup.alpha = 0;
-
+            canvasGroup.interactable = false;
+            canvasGroup.blocksRaycasts = false;
+            
             // Effect
+			canvasGroup.DOKill();
+
             StartCoroutine(DoEffect());
             IEnumerator DoEffect()
             {
@@ -73,6 +91,8 @@ namespace DSP
             CanvasGroup canvasGroup = obj.GetComponent<CanvasGroup>();
 
             // Transparency
+            canvasGroup.DOKill();
+            
             canvasGroup.interactable = false;
             canvasGroup.blocksRaycasts = false;
             canvasGroup.alpha = 1;
@@ -140,6 +160,8 @@ namespace DSP
                 // Scale
                 obj.transform.localScale = Vector3.one;
                 obj.transform.DOScale(Vector3.one * .4f, 0.15f).SetEase(Ease.InCubic).SetDelay(delay);
+                
+                Destroy(obj.gameObject, delay + .15f);
             }
         }
 
@@ -218,6 +240,9 @@ namespace DSP
                     break;
                 case DSP_DialogueBoxVisualizer.EffectType.DisappearDialogueBox:
                     DisappearDialogueBox(objs[0]);
+                    break;
+                case DSP_DialogueBoxVisualizer.EffectType.ForceDisappearDialogueBox:
+                    ForceDisappearDialogueBox(objs[0]);
                     break;
                 case DSP_DialogueBoxVisualizer.EffectType.AppearContinueButton:
                     AppearContinueButton(objs[0]);
