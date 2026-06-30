@@ -29,70 +29,74 @@ namespace DSP
         static Toolbar toolbar;
 
         List<DSP_NodeData> copiedNodes = new();
-
         private void OnEnable()
         {
             // set up Node Graph element
             graphView = new DSP_NodeGraphView() { name = "Node Graph" };
+            var grid = new GridBackground();
+            graphView.Insert(0, grid);
 
             // set up ToolBar
-            {
-                toolbar = new Toolbar();
+            toolbar = new Toolbar();
 
-                // save button
-                ToolbarButton saveButton = new ToolbarButton(() => graphView.SaveToAsset(dialogueGraphAsset));
-                saveButton.iconImage = Background.FromTexture2D(EditorGUIUtility.IconContent("SaveActive").image as Texture2D);
-                saveButton.tooltip = "Save";
+            // save button
+            ToolbarButton saveButton = new ToolbarButton(() => graphView.SaveToAsset(dialogueGraphAsset));
+            saveButton.iconImage = Background.FromTexture2D(EditorGUIUtility.IconContent("SaveActive").image as Texture2D);
+            saveButton.tooltip = "Save";
 
-                toolbar.Add(saveButton);
-                rootVisualElement.Add(toolbar);
-                rootVisualElement.Add(graphView); 
-            }
+            toolbar.Add(saveButton);
+            rootVisualElement.Add(toolbar);
+            rootVisualElement.Add(graphView);
 
             // setup callbacks
+            graphView.graphViewChanged = OnGraphViewChanged;
+            Undo.undoRedoPerformed += OnUndoRedo;
+            rootVisualElement.RegisterCallback<KeyDownEvent>(KeyBindCallback); 
+        }
+        void KeyBindCallback(KeyDownEvent evt)
+        {
+            if ((evt.modifiers & EventModifiers.Control) != 0)
             {
-                graphView.graphViewChanged = OnGraphViewChanged;
-
-                Undo.undoRedoPerformed += OnUndoRedo;
-
-                rootVisualElement.RegisterCallback<KeyDownEvent>(evt =>
+                switch (evt.keyCode)
                 {
-                    if ((evt.modifiers & EventModifiers.Control) != 0)
-                    {
-                        switch (evt.keyCode)
-                        {
-                            case KeyCode.S:
-                                graphView.SaveToAsset(dialogueGraphAsset);
+                    case KeyCode.S:
+                        graphView.SaveToAsset(dialogueGraphAsset);
 
-                                evt.StopPropagation();
-                                break;
+                        evt.StopPropagation();
+                        break;
 
-                            case KeyCode.C:
-                                Copy();
-                                evt.StopPropagation();
-                                break;
+                    case KeyCode.C:
+                        Copy();
+                        evt.StopPropagation();
+                        break;
 
-                            case KeyCode.V:
-                                Paste();
-                                evt.StopPropagation();
-                                break;
+                    case KeyCode.V:
+                        Paste();
+                        evt.StopPropagation();
+                        break;
 
-                            case KeyCode.X:
-                                Copy();
-                                foreach (Node node in graphView.selection.OfType<Node>().ToList())
-                                    node.parent.Remove(node);
-                                evt.StopPropagation();
-                                break;
+                    case KeyCode.X:
+                        Copy();
+                        foreach (Node node in graphView.selection.OfType<Node>().ToList())
+                            node.parent.Remove(node);
+                        evt.StopPropagation();
+                        break;
 
-                            case KeyCode.D:
-                                Copy();
-                                Paste();
-                                evt.StopPropagation();
-                                break;
-                        }
-                    }
-                }); 
+                    case KeyCode.D:
+                        Copy();
+                        Paste();
+                        evt.StopPropagation();
+                        break;
+                }
             }
+        }
+        private void OnDisable()
+        {
+            Undo.undoRedoPerformed -= OnUndoRedo;
+
+            rootVisualElement.UnregisterCallback<KeyDownEvent>(KeyBindCallback);
+
+            rootVisualElement.Clear();
         }
         GraphViewChange OnGraphViewChanged(GraphViewChange change)
         {
@@ -169,9 +173,6 @@ namespace DSP
         {
             foreach (Node node in nodes) RemoveElement(node);
             foreach (Edge edge in edges) RemoveElement(edge);
-
-            var grid = new GridBackground();
-            Insert(0, grid);
 
             schedule.Execute(() =>
             {
@@ -514,6 +515,25 @@ namespace DSP
             };
         }
 
+        public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
+        {
+            var compatiblePorts = new List<Port>();
+
+            ports.ForEach((port) =>
+            {
+                bool isNotSamePort = port != startPort;
+                bool isNotSameNode = port.node != startPort.node;
+                bool isOppositeDirection = port.direction != startPort.direction;
+
+                if (isNotSamePort && isNotSameNode && isOppositeDirection)
+                {
+                    compatiblePorts.Add(port);
+                }
+            });
+
+            return compatiblePorts;
+        }
+
         private void OnEditorUpdate()
         {
             foreach (var element in nodes)
@@ -635,6 +655,8 @@ namespace DSP
                 case Direction.Input:
                     return node.inputContainer.Children().Cast<Port>().ToArray();
                 case Direction.Output:
+                    if (node is DSP_RandomNode randomNode)
+                        return randomNode.optionPorts.ToArray();
                     if (node is DSP_ChoiceNode choiceNode)
                         return choiceNode.choices.Select(c => c.Item2).ToArray();
                     else
@@ -1938,6 +1960,7 @@ namespace DSP
     public class DSP_RandomNode : Node
     {
         public List<int> optionWeights = new();
+        public List<Port> optionPorts = new();
 
         public DSP_RandomNode(Vector2 position, SerializableValue[] values = null)
         {
@@ -2024,6 +2047,7 @@ namespace DSP
 
             // port
             Port port = this.GeneratePort(Direction.Output, Port.Capacity.Single);
+            optionPorts.Add(port);
             row.Add(port);
 
             optionsContainer.Add(row);
@@ -2036,6 +2060,7 @@ namespace DSP
 
             optionsContainer.RemoveAt(optionWeights.Count - 1);
             optionWeights.RemoveAt(optionWeights.Count - 1);
+            optionPorts.RemoveAt(optionPorts.Count - 1);
         }
     } 
 }
